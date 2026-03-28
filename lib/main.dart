@@ -11,6 +11,7 @@ import 'features/loan/presentation/screens/loan_list_screen.dart';
 import 'features/loan/presentation/screens/add_edit_loan_screen.dart';
 import 'features/loan/data/models/loan_model.dart';
 import 'features/loan/data/models/repayment_model.dart';
+import 'features/credit_card/presentation/screens/credit_card_list_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -62,6 +63,7 @@ class _AppShellState extends State<AppShell> {
     DashboardScreen(),
     ExpenseListScreen(),
     LoanListScreen(),
+    CreditCardListScreen(),
   ];
 
   @override
@@ -91,17 +93,22 @@ class _AppShellState extends State<AppShell> {
             selectedIcon: Icon(Icons.account_balance_wallet_rounded),
             label: 'Loans',
           ),
+          NavigationDestination(
+            icon: Icon(Icons.credit_card_outlined),
+            selectedIcon: Icon(Icons.credit_card_rounded),
+            label: 'Cards',
+          ),
         ],
       ),
       floatingActionButton: _currentIndex == 0 ? null : FloatingActionButton(
         onPressed: () {
-          if (_currentIndex == 1) {
+          if (_currentIndex == 1 || _currentIndex == 3) {
             Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AddEditExpenseScreen()));
           } else if (_currentIndex == 2) {
             Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AddEditLoanScreen()));
           }
         },
-        tooltip: _currentIndex == 1 ? 'Add Expense' : 'Add Loan',
+        tooltip: _currentIndex == 1 ? 'Add Expense' : (_currentIndex == 2 ? 'Add Loan' : 'Add CC Spend'),
         child: const Icon(Icons.add_rounded),
       ),
     );

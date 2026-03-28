@@ -72,6 +72,7 @@ class ExpenseNotifier extends AsyncNotifier<List<Expense>> {
     String? note,
     bool isIncome = false,
     String? receiptPath,
+    bool isCreditCard = false,
   }) async {
     final expense = Expense(
       id: const Uuid().v4(),
@@ -81,6 +82,7 @@ class ExpenseNotifier extends AsyncNotifier<List<Expense>> {
       note: note?.trim().isEmpty ?? true ? null : note?.trim(),
       isIncome: isIncome,
       receiptPath: receiptPath,
+      isCreditCard: isCreditCard,
     );
     await ref.read(expenseRepositoryProvider).addExpense(expense);
     await refresh();
@@ -95,6 +97,31 @@ class ExpenseNotifier extends AsyncNotifier<List<Expense>> {
     await ref.read(expenseRepositoryProvider).deleteExpense(id);
     await refresh();
   }
+
+  /// Settles all provided unmatched credit card spends into one master bill
+  Future<void> settleCreditCardBill(List<Expense> spends, DateTime date) async {
+    double total = 0.0;
+    for (final e in spends) {
+      if (!e.isCreditCardSettled) {
+        total += e.amount;
+        final updated = e.copyWith(isCreditCardSettled: true);
+        await ref.read(expenseRepositoryProvider).updateExpense(updated);
+      }
+    }
+    if (total > 0) {
+      final billExpense = Expense(
+        id: const Uuid().v4(),
+        amount: total,
+        category: ExpenseCategory.bills,
+        date: date,
+        note: 'Credit Card Bill Payment',
+        isIncome: false,
+        isCreditCard: false,
+      );
+      await ref.read(expenseRepositoryProvider).addExpense(billExpense);
+    }
+    await refresh();
+  }
 }
 
 final expensesProvider =
@@ -106,12 +133,13 @@ final expensesProvider =
 // Derived / Computed Providers
 // ─────────────────────────────────────────────
 
-/// Expenses filtered to the currently selected month.
+/// Expenses filtered to the currently selected month (excludes Credit Card spends).
 final filteredExpensesProvider = Provider<AsyncValue<List<Expense>>>((ref) {
   final expensesAsync = ref.watch(expensesProvider);
   final selectedMonth = ref.watch(selectedMonthProvider);
   return expensesAsync.whenData((expenses) => expenses
       .where((e) =>
+          !e.isCreditCard &&
           e.date.month == selectedMonth.month &&
           e.date.year == selectedMonth.year)
       .toList());
@@ -195,9 +223,29 @@ final dailyTrendProvider = Provider<List<double>>((ref) {
 final recentExpensesProvider = Provider<List<Expense>>((ref) {
   final expensesAsync = ref.watch(expensesProvider);
   return expensesAsync.maybeWhen(
-    data: (expenses) => expenses.take(5).toList(),
+    data: (expenses) => expenses.where((e) => !e.isCreditCard).take(5).toList(),
     orElse: () => [],
   );
+});
+
+// ─────────────────────────────────────────────
+// Credit Card Providers
+// ─────────────────────────────────────────────
+
+/// All unpaid credit card spends across all time
+final unpaidCreditCardSpendsProvider = Provider<List<Expense>>((ref) {
+  final expensesAsync = ref.watch(expensesProvider);
+  return expensesAsync.maybeWhen(
+    data: (expenses) =>
+        expenses.where((e) => e.isCreditCard && !e.isCreditCardSettled).toList(),
+    orElse: () => [],
+  );
+});
+
+/// Total outstanding credit card bill
+final totalUnpaidCreditCardProvider = Provider<double>((ref) {
+  final unpaid = ref.watch(unpaidCreditCardSpendsProvider);
+  return unpaid.fold(0.0, (sum, e) => sum + e.amount);
 });
 
 // ─────────────────────────────────────────────

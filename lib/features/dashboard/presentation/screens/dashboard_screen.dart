@@ -427,3 +427,4 @@ class _LoansSummaryCard extends StatelessWidget {
     );
   }
 }
+

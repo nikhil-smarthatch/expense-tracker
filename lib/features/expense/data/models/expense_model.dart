@@ -31,6 +31,12 @@ class ExpenseModel extends HiveObject {
   @HiveField(6)
   String? receiptPath;
 
+  @HiveField(7, defaultValue: false)
+  bool isCreditCard;
+
+  @HiveField(8, defaultValue: false)
+  bool isCreditCardSettled;
+
   ExpenseModel({
     required this.id,
     required this.amount,
@@ -39,6 +45,8 @@ class ExpenseModel extends HiveObject {
     this.note,
     this.isIncome = false,
     this.receiptPath,
+    this.isCreditCard = false,
+    this.isCreditCardSettled = false,
   });
 
   /// Creates an [ExpenseModel] from a domain [Expense].
@@ -50,6 +58,8 @@ class ExpenseModel extends HiveObject {
         note: expense.note,
         isIncome: expense.isIncome,
         receiptPath: expense.receiptPath,
+        isCreditCard: expense.isCreditCard,
+        isCreditCardSettled: expense.isCreditCardSettled,
       );
 
   /// Converts this model back to the domain [Expense] entity.
@@ -61,5 +71,7 @@ class ExpenseModel extends HiveObject {
         note: note,
         isIncome: isIncome,
         receiptPath: receiptPath,
+        isCreditCard: isCreditCard,
+        isCreditCardSettled: isCreditCardSettled,
       );
 }

@@ -24,13 +24,15 @@ class ExpenseModelAdapter extends TypeAdapter<ExpenseModel> {
       note: fields[4] as String?,
       isIncome: fields[5] == null ? false : fields[5] as bool,
       receiptPath: fields[6] as String?,
+      isCreditCard: fields[7] == null ? false : fields[7] as bool,
+      isCreditCardSettled: fields[8] == null ? false : fields[8] as bool,
     );
   }
 
   @override
   void write(BinaryWriter writer, ExpenseModel obj) {
     writer
-      ..writeByte(7)
+      ..writeByte(9)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -44,7 +46,11 @@ class ExpenseModelAdapter extends TypeAdapter<ExpenseModel> {
       ..writeByte(5)
       ..write(obj.isIncome)
       ..writeByte(6)
-      ..write(obj.receiptPath);
+      ..write(obj.receiptPath)
+      ..writeByte(7)
+      ..write(obj.isCreditCard)
+      ..writeByte(8)
+      ..write(obj.isCreditCardSettled);
   }
 
   @override

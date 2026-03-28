@@ -31,6 +31,7 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
   
   bool _isIncome = false;
   String? _receiptPath;
+  bool _isCreditCard = false;
 
   bool get _isEditing => widget.existingExpense != null;
 
@@ -42,6 +43,7 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
     _selectedDate = e?.date ?? DateTime.now();
     _isIncome = e?.isIncome ?? false;
     _receiptPath = e?.receiptPath;
+    _isCreditCard = e?.isCreditCard ?? false;
 
     if (e != null) {
       _amountController.text = e.amount.toStringAsFixed(2);
@@ -109,6 +111,7 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
           isIncome: _isIncome,
           receiptPath: _receiptPath,
           clearReceipt: _receiptPath == null,
+          isCreditCard: _isCreditCard,
         );
         await ref.read(expensesProvider.notifier).updateExpense(updated);
       } else {
@@ -119,6 +122,7 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
               note: note.isEmpty ? null : note,
               isIncome: _isIncome,
               receiptPath: _receiptPath,
+              isCreditCard: _isCreditCard,
             );
       }
       if (mounted) Navigator.of(context).pop();
@@ -190,6 +194,18 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
                 ),
               ),
               const SizedBox(height: 24),
+
+              if (!_isIncome) ...[
+                SwitchListTile(
+                  title: const Text('Paid via Credit Card?'),
+                  subtitle: const Text('Delays budget impact until the bill is paid'),
+                  value: _isCreditCard,
+                  activeColor: cs.primary,
+                  onChanged: (val) => setState(() => _isCreditCard = val),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                ),
+                const SizedBox(height: 16),
+              ],
 
               // Amount Field
               _Label('Amount (₹)'),

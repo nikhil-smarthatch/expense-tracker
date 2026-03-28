@@ -11,6 +11,8 @@ class Expense {
     this.note,
     this.isIncome = false,
     this.receiptPath,
+    this.isCreditCard = false,
+    this.isCreditCardSettled = false,
   });
 
   final String id;
@@ -20,6 +22,8 @@ class Expense {
   final String? note;
   final bool isIncome;
   final String? receiptPath;
+  final bool isCreditCard;
+  final bool isCreditCardSettled;
 
   /// Returns a copy of this expense with updated fields.
   Expense copyWith({
@@ -32,6 +36,8 @@ class Expense {
     bool? isIncome,
     String? receiptPath,
     bool clearReceipt = false,
+    bool? isCreditCard,
+    bool? isCreditCardSettled,
   }) {
     return Expense(
       id: id ?? this.id,
@@ -41,6 +47,8 @@ class Expense {
       note: clearNote ? null : (note ?? this.note),
       isIncome: isIncome ?? this.isIncome,
       receiptPath: clearReceipt ? null : (receiptPath ?? this.receiptPath),
+      isCreditCard: isCreditCard ?? this.isCreditCard,
+      isCreditCardSettled: isCreditCardSettled ?? this.isCreditCardSettled,
     );
   }
 
