@@ -8,6 +8,7 @@ import '../../data/repositories/expense_repository_impl.dart';
 import '../../domain/entities/expense.dart';
 import '../../domain/entities/expense_category.dart';
 import '../../domain/repositories/expense_repository.dart';
+import '../../../loan/presentation/providers/loan_providers.dart';
 
 // ─────────────────────────────────────────────
 // Infrastructure Providers
@@ -136,9 +137,13 @@ final monthlyExpenseProvider = Provider<double>((ref) {
   );
 });
 
-/// Net balance (Income - Expense).
+/// Net balance (Income + Borrowed - Expense - Lent).
 final netBalanceProvider = Provider<double>((ref) {
-  return ref.watch(monthlyIncomeProvider) - ref.watch(monthlyExpenseProvider);
+  final income = ref.watch(monthlyIncomeProvider);
+  final expense = ref.watch(monthlyExpenseProvider);
+  final borrowed = ref.watch(totalBorrowedProvider);
+  final lent = ref.watch(totalLentProvider);
+  return income + borrowed - expense - lent;
 });
 
 /// Category-wise totals map for the selected month (Expenses only).

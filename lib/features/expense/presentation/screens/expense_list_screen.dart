@@ -61,23 +61,31 @@ class ExpenseListScreen extends ConsumerWidget {
                 ],
               ),
             ),
-            // Expense list
             Expanded(
-              child: expenses.isEmpty
-                  ? EmptyStateWidget(
-                      title: 'No expenses this month',
-                      subtitle:
-                          'Tap + to add your first expense for this period',
-                      icon: Icons.receipt_long_rounded,
-                      action: FilledButton.icon(
-                        onPressed: () => _openAddExpense(context),
-                        icon: const Icon(Icons.add_rounded),
-                        label: const Text('Add Expense'),
-                      ),
-                    )
-                  : RefreshIndicator(
-                      onRefresh: () => ref.refresh(expensesProvider.future),
-                      child: ListView.builder(
+              child: RefreshIndicator(
+                onRefresh: () => ref.refresh(expensesProvider.future),
+                child: expenses.isEmpty
+                    ? ListView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        children: [
+                          SizedBox(
+                            height: MediaQuery.of(context).size.height * 0.5,
+                            child: EmptyStateWidget(
+                              title: 'No expenses this month',
+                              subtitle:
+                                  'Tap + to add your first expense for this period',
+                              icon: Icons.receipt_long_rounded,
+                              action: FilledButton.icon(
+                                onPressed: () => _openAddExpense(context),
+                                icon: const Icon(Icons.add_rounded),
+                                label: const Text('Add Expense'),
+                              ),
+                            ),
+                          ),
+                        ],
+                      )
+                    : ListView.builder(
+                        physics: const AlwaysScrollableScrollPhysics(),
                         padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
                         itemCount: expenses.length,
                         itemBuilder: (context, index) {
@@ -96,7 +104,7 @@ class ExpenseListScreen extends ConsumerWidget {
                           );
                         },
                       ),
-                    ),
+              ),
             ),
           ],
         ),

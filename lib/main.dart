@@ -7,6 +7,10 @@ import 'features/dashboard/presentation/screens/dashboard_screen.dart';
 import 'features/expense/data/models/expense_model.dart';
 import 'features/expense/presentation/screens/expense_list_screen.dart';
 import 'features/expense/presentation/screens/add_edit_expense_screen.dart';
+import 'features/loan/presentation/screens/loan_list_screen.dart';
+import 'features/loan/presentation/screens/add_edit_loan_screen.dart';
+import 'features/loan/data/models/loan_model.dart';
+import 'features/loan/data/models/repayment_model.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -14,8 +18,12 @@ Future<void> main() async {
   // Initialize Hive
   await Hive.initFlutter();
   Hive.registerAdapter(ExpenseModelAdapter());
+  Hive.registerAdapter(LoanModelAdapter());
+  Hive.registerAdapter(RepaymentModelAdapter());
   await Hive.openBox<ExpenseModel>(AppConstants.hiveExpenseBox);
   await Hive.openBox<double>(AppConstants.hiveBudgetBox);
+  await Hive.openBox<LoanModel>(AppConstants.hiveLoansBox);
+  await Hive.openBox<RepaymentModel>(AppConstants.hiveRepaymentsBox);
 
   runApp(
     const ProviderScope(
@@ -53,6 +61,7 @@ class _AppShellState extends State<AppShell> {
   static const List<Widget> _screens = [
     DashboardScreen(),
     ExpenseListScreen(),
+    LoanListScreen(),
   ];
 
   @override
@@ -77,15 +86,22 @@ class _AppShellState extends State<AppShell> {
             selectedIcon: Icon(Icons.list_alt_rounded),
             label: 'Expenses',
           ),
+          NavigationDestination(
+            icon: Icon(Icons.account_balance_wallet_outlined),
+            selectedIcon: Icon(Icons.account_balance_wallet_rounded),
+            label: 'Loans',
+          ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (_) => const AddEditExpenseScreen(),
-          ),
-        ),
-        tooltip: 'Add Expense',
+      floatingActionButton: _currentIndex == 0 ? null : FloatingActionButton(
+        onPressed: () {
+          if (_currentIndex == 1) {
+            Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AddEditExpenseScreen()));
+          } else if (_currentIndex == 2) {
+            Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AddEditLoanScreen()));
+          }
+        },
+        tooltip: _currentIndex == 1 ? 'Add Expense' : 'Add Loan',
         child: const Icon(Icons.add_rounded),
       ),
     );

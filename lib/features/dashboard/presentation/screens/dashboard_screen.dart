@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../expense/presentation/providers/expense_providers.dart';
+import '../../../loan/presentation/providers/loan_providers.dart';
 import '../../../expense/presentation/widgets/expense_card.dart';
 import '../../../expense/presentation/widgets/empty_state.dart';
 import '../../../expense/presentation/widgets/monthly_filter.dart';
@@ -56,6 +57,13 @@ class DashboardScreen extends ConsumerWidget {
                   balance: ref.watch(netBalanceProvider),
                   budgetLimit: budgetLimit,
                   budgetUsage: budgetUsage,
+                ),
+                const SizedBox(height: 8),
+
+                // Loans Summary
+                _LoansSummaryCard(
+                  totalBorrowed: ref.watch(totalBorrowedProvider),
+                  totalLent: ref.watch(totalLentProvider),
                 ),
                 const SizedBox(height: 16),
 
@@ -355,6 +363,67 @@ class _SectionTitle extends StatelessWidget {
           .textTheme
           .titleMedium
           ?.copyWith(fontWeight: FontWeight.bold),
+    );
+  }
+}
+
+class _LoansSummaryCard extends StatelessWidget {
+  const _LoansSummaryCard({required this.totalBorrowed, required this.totalLent});
+  final double totalBorrowed;
+  final double totalLent;
+
+  @override
+  Widget build(BuildContext context) {
+    if (totalBorrowed == 0 && totalLent == 0) return const SizedBox.shrink();
+    final cs = Theme.of(context).colorScheme;
+    return Row(
+      children: [
+        if (totalBorrowed > 0)
+          Expanded(
+            child: Card(
+              color: cs.errorContainer.withValues(alpha: 0.5),
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                side: BorderSide(color: cs.errorContainer),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Total Borrowed', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: cs.error, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 4),
+                    Text(CurrencyFormatter.format(totalBorrowed), style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: cs.error)),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        if (totalBorrowed > 0 && totalLent > 0) const SizedBox(width: 8),
+        if (totalLent > 0)
+          Expanded(
+            child: Card(
+              color: Colors.green.withValues(alpha: 0.1),
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                side: BorderSide(color: Colors.green.withValues(alpha: 0.3)),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Total Lent', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.green, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 4),
+                    Text(CurrencyFormatter.format(totalLent), style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: Colors.green)),
+                  ],
+                ),
+              ),
+            ),
+          ),
+      ],
     );
   }
 }
