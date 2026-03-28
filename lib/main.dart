@@ -3,9 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'core/theme/app_theme.dart';
 import 'core/constants/app_constants.dart';
-import 'core/utils/sample_data.dart';
 import 'features/dashboard/presentation/screens/dashboard_screen.dart';
-import 'features/expense/data/datasources/expense_local_datasource.dart';
 import 'features/expense/data/models/expense_model.dart';
 import 'features/expense/presentation/screens/expense_list_screen.dart';
 import 'features/expense/presentation/screens/add_edit_expense_screen.dart';
@@ -17,10 +15,7 @@ Future<void> main() async {
   await Hive.initFlutter();
   Hive.registerAdapter(ExpenseModelAdapter());
   await Hive.openBox<ExpenseModel>(AppConstants.hiveExpenseBox);
-
-  // Seed sample data if box is empty
-  final datasource = ExpenseLocalDatasource();
-  await seedSampleData(datasource);
+  await Hive.openBox<double>(AppConstants.hiveBudgetBox);
 
   runApp(
     const ProviderScope(

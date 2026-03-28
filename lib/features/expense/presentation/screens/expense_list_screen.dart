@@ -101,11 +101,6 @@ class ExpenseListScreen extends ConsumerWidget {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _openAddExpense(context),
-        icon: const Icon(Icons.add_rounded),
-        label: const Text('Add Expense'),
-      ),
     );
   }
 

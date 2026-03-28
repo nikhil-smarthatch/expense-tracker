@@ -157,7 +157,7 @@ class DashboardScreen extends ConsumerWidget {
             onPressed: () {
               final value = double.tryParse(controller.text);
               if (value != null && value > 0) {
-                ref.read(budgetLimitProvider.notifier).state = value;
+                ref.read(budgetLimitProvider.notifier).setBudget(value);
               }
               Navigator.of(context).pop();
             },

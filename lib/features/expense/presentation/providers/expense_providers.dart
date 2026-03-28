@@ -1,5 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:uuid/uuid.dart';
+import '../../../../core/constants/app_constants.dart';
 import '../../../../core/utils/app_date_utils.dart';
 import '../../data/datasources/expense_local_datasource.dart';
 import '../../data/repositories/expense_repository_impl.dart';
@@ -198,7 +200,28 @@ final searchResultsProvider = Provider<List<Expense>>((ref) {
 // Budget
 // ─────────────────────────────────────────────
 
-final budgetLimitProvider = StateProvider<double>((ref) => 30000.0);
+class BudgetNotifier extends Notifier<double> {
+  late Box<double> _box;
+  late String _monthKey;
+
+  @override
+  double build() {
+    _box = Hive.box<double>(AppConstants.hiveBudgetBox);
+    final selectedMonth = ref.watch(selectedMonthProvider);
+    // Use formatMonthYear as a unique string key per month (e.g., "March 2026")
+    _monthKey = AppDateUtils.formatMonthYear(selectedMonth);
+
+    return _box.get(_monthKey, defaultValue: AppConstants.defaultBudgetLimit) ??
+        AppConstants.defaultBudgetLimit;
+  }
+
+  void setBudget(double amount) {
+    _box.put(_monthKey, amount);
+    state = amount;
+  }
+}
+
+final budgetLimitProvider = NotifierProvider<BudgetNotifier, double>(BudgetNotifier.new);
 
 /// Percentage of budget used this month (0.0 – 1.0+)
 final budgetUsageProvider = Provider<double>((ref) {
