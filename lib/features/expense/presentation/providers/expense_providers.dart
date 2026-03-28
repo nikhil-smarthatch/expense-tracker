@@ -69,6 +69,8 @@ class ExpenseNotifier extends AsyncNotifier<List<Expense>> {
     required ExpenseCategory category,
     required DateTime date,
     String? note,
+    bool isIncome = false,
+    String? receiptPath,
   }) async {
     final expense = Expense(
       id: const Uuid().v4(),
@@ -76,6 +78,8 @@ class ExpenseNotifier extends AsyncNotifier<List<Expense>> {
       category: category,
       date: date,
       note: note?.trim().isEmpty ?? true ? null : note?.trim(),
+      isIncome: isIncome,
+      receiptPath: receiptPath,
     );
     await ref.read(expenseRepositoryProvider).addExpense(expense);
     await refresh();
@@ -112,24 +116,39 @@ final filteredExpensesProvider = Provider<AsyncValue<List<Expense>>>((ref) {
       .toList());
 });
 
-/// Total amount spent in the selected month.
-final monthlyTotalProvider = Provider<double>((ref) {
+/// Total income in the selected month.
+final monthlyIncomeProvider = Provider<double>((ref) {
   final filtered = ref.watch(filteredExpensesProvider);
   return filtered.maybeWhen(
-    data: (expenses) =>
-        expenses.fold(0.0, (sum, e) => sum + e.amount),
+    data: (transactions) =>
+        transactions.where((e) => e.isIncome).fold(0.0, (sum, e) => sum + e.amount),
     orElse: () => 0.0,
   );
 });
 
-/// Category-wise totals map for the selected month.
+/// Total expense in the selected month.
+final monthlyExpenseProvider = Provider<double>((ref) {
+  final filtered = ref.watch(filteredExpensesProvider);
+  return filtered.maybeWhen(
+    data: (transactions) =>
+        transactions.where((e) => !e.isIncome).fold(0.0, (sum, e) => sum + e.amount),
+    orElse: () => 0.0,
+  );
+});
+
+/// Net balance (Income - Expense).
+final netBalanceProvider = Provider<double>((ref) {
+  return ref.watch(monthlyIncomeProvider) - ref.watch(monthlyExpenseProvider);
+});
+
+/// Category-wise totals map for the selected month (Expenses only).
 final categoryBreakdownProvider =
     Provider<Map<ExpenseCategory, double>>((ref) {
   final filtered = ref.watch(filteredExpensesProvider);
   return filtered.maybeWhen(
-    data: (expenses) {
+    data: (transactions) {
       final map = <ExpenseCategory, double>{};
-      for (final e in expenses) {
+      for (final e in transactions.where((t) => !t.isIncome)) {
         map[e.category] = (map[e.category] ?? 0.0) + e.amount;
       }
       return map;
@@ -138,7 +157,7 @@ final categoryBreakdownProvider =
   );
 });
 
-/// Highest spending category in the selected month.
+/// Highest spending category in the selected month (Expenses only).
 final highestCategoryProvider = Provider<ExpenseCategory?>((ref) {
   final breakdown = ref.watch(categoryBreakdownProvider);
   if (breakdown.isEmpty) return null;
@@ -156,9 +175,9 @@ final dailyTrendProvider = Provider<List<double>>((ref) {
       DateTime(selectedMonth.year, selectedMonth.month + 1, 0).day;
 
   return filtered.maybeWhen(
-    data: (expenses) {
+    data: (transactions) {
       final dailyTotals = List<double>.filled(daysInMonth, 0.0);
-      for (final e in expenses) {
+      for (final e in transactions.where((t) => !t.isIncome)) {
         dailyTotals[e.date.day - 1] += e.amount;
       }
       return dailyTotals;
@@ -225,8 +244,8 @@ final budgetLimitProvider = NotifierProvider<BudgetNotifier, double>(BudgetNotif
 
 /// Percentage of budget used this month (0.0 – 1.0+)
 final budgetUsageProvider = Provider<double>((ref) {
-  final total = ref.watch(monthlyTotalProvider);
+  final expense = ref.watch(monthlyExpenseProvider);
   final budget = ref.watch(budgetLimitProvider);
   if (budget <= 0) return 0;
-  return total / budget;
+  return expense / budget;
 });

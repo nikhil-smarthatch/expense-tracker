@@ -25,12 +25,20 @@ class ExpenseModel extends HiveObject {
   @HiveField(4)
   String? note;
 
+  @HiveField(5, defaultValue: false)
+  bool isIncome;
+
+  @HiveField(6)
+  String? receiptPath;
+
   ExpenseModel({
     required this.id,
     required this.amount,
     required this.categoryName,
     required this.dateMs,
     this.note,
+    this.isIncome = false,
+    this.receiptPath,
   });
 
   /// Creates an [ExpenseModel] from a domain [Expense].
@@ -40,6 +48,8 @@ class ExpenseModel extends HiveObject {
         categoryName: expense.category.name,
         dateMs: expense.date.millisecondsSinceEpoch,
         note: expense.note,
+        isIncome: expense.isIncome,
+        receiptPath: expense.receiptPath,
       );
 
   /// Converts this model back to the domain [Expense] entity.
@@ -49,5 +59,7 @@ class ExpenseModel extends HiveObject {
         category: ExpenseCategory.fromString(categoryName),
         date: DateTime.fromMillisecondsSinceEpoch(dateMs),
         note: note,
+        isIncome: isIncome,
+        receiptPath: receiptPath,
       );
 }

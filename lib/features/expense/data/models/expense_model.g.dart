@@ -1,7 +1,10 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
-// Manual Hive adapter for ExpenseModel (avoids build_runner requirement)
 
 part of 'expense_model.dart';
+
+// **************************************************************************
+// TypeAdapterGenerator
+// **************************************************************************
 
 class ExpenseModelAdapter extends TypeAdapter<ExpenseModel> {
   @override
@@ -19,13 +22,15 @@ class ExpenseModelAdapter extends TypeAdapter<ExpenseModel> {
       categoryName: fields[2] as String,
       dateMs: fields[3] as int,
       note: fields[4] as String?,
+      isIncome: fields[5] == null ? false : fields[5] as bool,
+      receiptPath: fields[6] as String?,
     );
   }
 
   @override
   void write(BinaryWriter writer, ExpenseModel obj) {
     writer
-      ..writeByte(5)
+      ..writeByte(7)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -35,7 +40,11 @@ class ExpenseModelAdapter extends TypeAdapter<ExpenseModel> {
       ..writeByte(3)
       ..write(obj.dateMs)
       ..writeByte(4)
-      ..write(obj.note);
+      ..write(obj.note)
+      ..writeByte(5)
+      ..write(obj.isIncome)
+      ..writeByte(6)
+      ..write(obj.receiptPath);
   }
 
   @override

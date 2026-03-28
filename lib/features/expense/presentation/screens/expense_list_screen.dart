@@ -14,7 +14,7 @@ class ExpenseListScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final filteredAsync = ref.watch(filteredExpensesProvider);
-    final monthlyTotal = ref.watch(monthlyTotalProvider);
+    final monthlyTotal = ref.watch(monthlyExpenseProvider);
     final cs = Theme.of(context).colorScheme;
 
     return Scaffold(

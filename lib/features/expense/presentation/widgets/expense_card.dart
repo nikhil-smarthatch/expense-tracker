@@ -107,19 +107,28 @@ class ExpenseCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      CurrencyFormatter.format(expense.amount),
+                      '${expense.isIncome ? '+' : '-'}${CurrencyFormatter.format(expense.amount)}',
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
                             fontWeight: FontWeight.bold,
-                            color: cs.primary,
+                            color: expense.isIncome ? Colors.green : cs.onSurface,
                           ),
                     ),
                     const SizedBox(height: 2),
-                    Text(
-                      AppDateUtils.formatShortDate(expense.date),
-                      style: Theme.of(context)
-                          .textTheme
-                          .bodySmall
-                          ?.copyWith(color: cs.onSurface.withOpacity(0.5)),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (expense.receiptPath != null) ...[
+                          Icon(Icons.receipt_rounded, size: 14, color: cs.onSurface.withOpacity(0.5)),
+                          const SizedBox(width: 4),
+                        ],
+                        Text(
+                          AppDateUtils.formatShortDate(expense.date),
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodySmall
+                              ?.copyWith(color: cs.onSurface.withOpacity(0.5)),
+                        ),
+                      ],
                     ),
                   ],
                 ),

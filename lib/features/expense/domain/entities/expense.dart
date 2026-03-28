@@ -9,6 +9,8 @@ class Expense {
     required this.category,
     required this.date,
     this.note,
+    this.isIncome = false,
+    this.receiptPath,
   });
 
   final String id;
@@ -16,6 +18,8 @@ class Expense {
   final ExpenseCategory category;
   final DateTime date;
   final String? note;
+  final bool isIncome;
+  final String? receiptPath;
 
   /// Returns a copy of this expense with updated fields.
   Expense copyWith({
@@ -25,6 +29,9 @@ class Expense {
     DateTime? date,
     String? note,
     bool clearNote = false,
+    bool? isIncome,
+    String? receiptPath,
+    bool clearReceipt = false,
   }) {
     return Expense(
       id: id ?? this.id,
@@ -32,6 +39,8 @@ class Expense {
       category: category ?? this.category,
       date: date ?? this.date,
       note: clearNote ? null : (note ?? this.note),
+      isIncome: isIncome ?? this.isIncome,
+      receiptPath: clearReceipt ? null : (receiptPath ?? this.receiptPath),
     );
   }
 
@@ -44,5 +53,5 @@ class Expense {
 
   @override
   String toString() =>
-      'Expense(id: $id, amount: $amount, category: ${category.label}, date: $date)';
+      'Expense(id: $id, amount: $amount, isIncome: $isIncome, category: ${category.label}, date: $date)';
 }

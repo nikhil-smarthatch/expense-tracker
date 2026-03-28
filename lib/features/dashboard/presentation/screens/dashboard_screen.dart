@@ -14,7 +14,6 @@ class DashboardScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final monthlyTotal = ref.watch(monthlyTotalProvider);
     final categoryBreakdown = ref.watch(categoryBreakdownProvider);
     final dailyTrend = ref.watch(dailyTrendProvider);
     final recentExpenses = ref.watch(recentExpensesProvider);
@@ -50,9 +49,11 @@ class DashboardScreen extends ConsumerWidget {
                 Center(child: const MonthlyFilterWidget()),
                 const SizedBox(height: 16),
 
-                // Total Expense Card
-                _TotalExpenseCard(
-                  total: monthlyTotal,
+                // Balance Card
+                _BalanceCard(
+                  income: ref.watch(monthlyIncomeProvider),
+                  expense: ref.watch(monthlyExpenseProvider),
+                  balance: ref.watch(netBalanceProvider),
                   budgetLimit: budgetLimit,
                   budgetUsage: budgetUsage,
                 ),
@@ -171,14 +172,18 @@ class DashboardScreen extends ConsumerWidget {
 
 // ── Sub-widgets ──────────────────────────────
 
-class _TotalExpenseCard extends StatelessWidget {
-  const _TotalExpenseCard({
-    required this.total,
+class _BalanceCard extends StatelessWidget {
+  const _BalanceCard({
+    required this.income,
+    required this.expense,
+    required this.balance,
     required this.budgetLimit,
     required this.budgetUsage,
   });
 
-  final double total;
+  final double income;
+  final double expense;
+  final double balance;
   final double budgetLimit;
   final double budgetUsage;
 
@@ -195,20 +200,76 @@ class _TotalExpenseCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Total This Month',
+              'Net Balance',
               style: Theme.of(context).textTheme.labelLarge?.copyWith(
                     color: cs.onPrimaryContainer.withOpacity(0.7),
                   ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 4),
             Text(
-              CurrencyFormatter.format(total),
+              CurrencyFormatter.format(balance),
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: cs.onPrimaryContainer,
                   ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
+            
+            // Income / Expense Row
+            Row(
+              children: [
+                Expanded(
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: Colors.green.withOpacity(0.2),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.arrow_downward_rounded, size: 16, color: Colors.green),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Income', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: cs.onPrimaryContainer.withOpacity(0.7))),
+                            Text(CurrencyFormatter.format(income), style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold, color: cs.onPrimaryContainer), overflow: TextOverflow.ellipsis),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: Colors.red.withOpacity(0.2),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.arrow_upward_rounded, size: 16, color: Colors.red),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Expense', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: cs.onPrimaryContainer.withOpacity(0.7))),
+                            Text(CurrencyFormatter.format(expense), style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold, color: cs.onPrimaryContainer), overflow: TextOverflow.ellipsis),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+
             // Budget progress bar
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
@@ -216,10 +277,10 @@ class _TotalExpenseCard extends StatelessWidget {
                 value: budgetUsage.clamp(0.0, 1.0),
                 backgroundColor: cs.onPrimaryContainer.withOpacity(0.15),
                 color: isOverBudget ? cs.error : cs.primary,
-                minHeight: 8,
+                minHeight: 6,
               ),
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 8),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [

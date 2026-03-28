@@ -1,5 +1,8 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
 import '../../domain/entities/expense.dart';
 import '../../domain/entities/expense_category.dart';
 import '../providers/expense_providers.dart';
@@ -16,15 +19,18 @@ class AddEditExpenseScreen extends ConsumerStatefulWidget {
       _AddEditExpenseScreenState();
 }
 
-class _AddEditExpenseScreenState
-    extends ConsumerState<AddEditExpenseScreen> {
+class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
   final _formKey = GlobalKey<FormState>();
   final _amountController = TextEditingController();
   final _noteController = TextEditingController();
+  final ImagePicker _picker = ImagePicker();
 
   late ExpenseCategory _selectedCategory;
   late DateTime _selectedDate;
   bool _isSaving = false;
+  
+  bool _isIncome = false;
+  String? _receiptPath;
 
   bool get _isEditing => widget.existingExpense != null;
 
@@ -34,6 +40,9 @@ class _AddEditExpenseScreenState
     final e = widget.existingExpense;
     _selectedCategory = e?.category ?? ExpenseCategory.food;
     _selectedDate = e?.date ?? DateTime.now();
+    _isIncome = e?.isIncome ?? false;
+    _receiptPath = e?.receiptPath;
+
     if (e != null) {
       _amountController.text = e.amount.toStringAsFixed(2);
       _noteController.text = e.note ?? '';
@@ -57,6 +66,31 @@ class _AddEditExpenseScreenState
     if (picked != null) setState(() => _selectedDate = picked);
   }
 
+  Future<void> _pickReceipt() async {
+    try {
+      final XFile? image = await _picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 50,
+        maxWidth: 800,
+      );
+      if (image == null) return;
+
+      final directory = await getApplicationDocumentsDirectory();
+      final name = '${DateTime.now().millisecondsSinceEpoch}_${image.name}';
+      final savedImage = await File(image.path).copy('${directory.path}/$name');
+
+      setState(() {
+        _receiptPath = savedImage.path;
+      });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error attaching receipt: $e')),
+        );
+      }
+    }
+  }
+
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isSaving = true);
@@ -72,16 +106,19 @@ class _AddEditExpenseScreenState
           date: _selectedDate,
           note: note.isEmpty ? null : note,
           clearNote: note.isEmpty,
+          isIncome: _isIncome,
+          receiptPath: _receiptPath,
+          clearReceipt: _receiptPath == null,
         );
-        await ref
-            .read(expensesProvider.notifier)
-            .updateExpense(updated);
+        await ref.read(expensesProvider.notifier).updateExpense(updated);
       } else {
         await ref.read(expensesProvider.notifier).addExpense(
               amount: amount,
               category: _selectedCategory,
               date: _selectedDate,
               note: note.isEmpty ? null : note,
+              isIncome: _isIncome,
+              receiptPath: _receiptPath,
             );
       }
       if (mounted) Navigator.of(context).pop();
@@ -96,7 +133,7 @@ class _AddEditExpenseScreenState
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(_isEditing ? 'Edit Expense' : 'Add Expense'),
+        title: Text(_isEditing ? 'Edit Transaction' : 'Add Transaction'),
         actions: [
           if (_isEditing)
             IconButton(
@@ -106,8 +143,8 @@ class _AddEditExpenseScreenState
                 final confirmed = await showDialog<bool>(
                   context: context,
                   builder: (_) => AlertDialog(
-                    title: const Text('Delete Expense'),
-                    content: const Text('Delete this expense?'),
+                    title: const Text('Delete Transaction'),
+                    content: const Text('Delete this transaction?'),
                     actions: [
                       TextButton(
                           onPressed: () => Navigator.of(context).pop(false),
@@ -137,6 +174,23 @@ class _AddEditExpenseScreenState
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Type Toggle
+              Center(
+                child: SegmentedButton<bool>(
+                  segments: const [
+                    ButtonSegment(value: false, label: Text('Expense'), icon: Icon(Icons.arrow_upward_rounded)),
+                    ButtonSegment(value: true, label: Text('Income'), icon: Icon(Icons.arrow_downward_rounded)),
+                  ],
+                  selected: {_isIncome},
+                  onSelectionChanged: (Set<bool> newSelection) {
+                    setState(() {
+                      _isIncome = newSelection.first;
+                    });
+                  },
+                ),
+              ),
+              const SizedBox(height: 24),
+
               // Amount Field
               _Label('Amount (₹)'),
               const SizedBox(height: 8),
@@ -221,6 +275,41 @@ class _AddEditExpenseScreenState
                   counterText: '',
                 ),
               ),
+              const SizedBox(height: 24),
+
+              // Receipt Attachment
+              _Label('Receipt Attachment'),
+              const SizedBox(height: 8),
+              if (_receiptPath != null)
+                Stack(
+                  alignment: Alignment.topRight,
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image.file(
+                        File(_receiptPath!),
+                        height: 120,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.remove_circle),
+                      color: Colors.red,
+                      onPressed: () => setState(() => _receiptPath = null),
+                    ),
+                  ],
+                )
+              else
+                OutlinedButton.icon(
+                  onPressed: _pickReceipt,
+                  icon: const Icon(Icons.add_a_photo_rounded),
+                  label: const Text('Attach Receipt'),
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size.fromHeight(50),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
               const SizedBox(height: 32),
 
               // Save Button
@@ -236,7 +325,7 @@ class _AddEditExpenseScreenState
                               strokeWidth: 2, color: Colors.white),
                         )
                       : const Icon(Icons.check_rounded),
-                  label: Text(_isEditing ? 'Save Changes' : 'Add Expense'),
+                  label: Text(_isEditing ? 'Save Changes' : 'Add Transaction'),
                 ),
               ),
             ],

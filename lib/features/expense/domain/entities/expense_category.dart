@@ -6,6 +6,7 @@ enum ExpenseCategory {
   travel,
   bills,
   shopping,
+  salary,
   others;
 
   String get label {
@@ -18,6 +19,8 @@ enum ExpenseCategory {
         return 'Bills';
       case ExpenseCategory.shopping:
         return 'Shopping';
+      case ExpenseCategory.salary:
+        return 'Salary';
       case ExpenseCategory.others:
         return 'Others';
     }
@@ -33,6 +36,8 @@ enum ExpenseCategory {
         return Icons.receipt_long_rounded;
       case ExpenseCategory.shopping:
         return Icons.shopping_bag_rounded;
+      case ExpenseCategory.salary:
+        return Icons.monetization_on_rounded;
       case ExpenseCategory.others:
         return Icons.category_rounded;
     }
@@ -48,8 +53,10 @@ enum ExpenseCategory {
         return const Color(0xFFFFBE0B);
       case ExpenseCategory.shopping:
         return const Color(0xFF9D4EDD);
-      case ExpenseCategory.others:
+      case ExpenseCategory.salary:
         return const Color(0xFF06D6A0);
+      case ExpenseCategory.others:
+        return const Color(0xFF118AB2);
     }
   }
 
