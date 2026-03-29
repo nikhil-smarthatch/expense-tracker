@@ -10,6 +10,7 @@ import '../providers/savings_goal_providers.dart';
 import '../widgets/goal_progress_card.dart';
 import 'savings_goal_screen.dart';
 import 'add_edit_goal_screen.dart';
+import 'smart_insights_screen.dart';
 
 class IncomeListScreen extends ConsumerWidget {
   const IncomeListScreen({super.key});
@@ -26,6 +27,15 @@ class IncomeListScreen extends ConsumerWidget {
         title: const Text('Income'),
         elevation: 0,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.lightbulb_outline_rounded),
+            tooltip: 'Smart Insights',
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => const SmartInsightsScreen(),
+              ),
+            ),
+          ),
           IconButton(
             icon: const Icon(Icons.add_circle_outline),
             tooltip: 'Add Savings Goal',
