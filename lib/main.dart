@@ -12,6 +12,7 @@ import 'features/loan/presentation/screens/add_edit_loan_screen.dart';
 import 'features/loan/data/models/loan_model.dart';
 import 'features/loan/data/models/repayment_model.dart';
 import 'features/credit_card/presentation/screens/credit_card_list_screen.dart';
+import 'features/income/presentation/screens/income_list_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -75,6 +76,7 @@ class _AppShellState extends State<AppShell> {
   static const List<Widget> _screens = [
     DashboardScreen(),
     ExpenseListScreen(),
+    IncomeListScreen(),
     LoanListScreen(),
     CreditCardListScreen(),
   ];
@@ -112,6 +114,11 @@ class _AppShellState extends State<AppShell> {
             label: 'Expenses',
           ),
           NavigationDestination(
+            icon: Icon(Icons.arrow_downward_rounded),
+            selectedIcon: Icon(Icons.arrow_downward_rounded),
+            label: 'Income',
+          ),
+          NavigationDestination(
             icon: Icon(Icons.account_balance_wallet_outlined),
             selectedIcon: Icon(Icons.account_balance_wallet_rounded),
             label: 'Loans',
@@ -125,13 +132,13 @@ class _AppShellState extends State<AppShell> {
       ),
       floatingActionButton: _currentIndex == 0 ? null : FloatingActionButton(
         onPressed: () {
-          if (_currentIndex == 1 || _currentIndex == 3) {
+          if (_currentIndex == 1 || _currentIndex == 2 || _currentIndex == 4) {
             Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AddEditExpenseScreen()));
-          } else if (_currentIndex == 2) {
+          } else if (_currentIndex == 3) {
             Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AddEditLoanScreen()));
           }
         },
-        tooltip: _currentIndex == 1 ? 'Add Expense' : (_currentIndex == 2 ? 'Add Loan' : 'Add CC Spend'),
+        tooltip: _currentIndex == 1 ? 'Add Expense' : (_currentIndex == 2 ? 'Add Income' : (_currentIndex == 3 ? 'Add Loan' : 'Add CC Spend')),
         child: const Icon(Icons.add_rounded),
       ),
     );

@@ -7,6 +7,7 @@ import '../../domain/entities/expense.dart';
 import '../../domain/entities/expense_category.dart';
 import '../providers/expense_providers.dart';
 import '../widgets/category_chip.dart';
+import '../widgets/image_preview_widget.dart';
 
 class AddEditExpenseScreen extends ConsumerStatefulWidget {
   const AddEditExpenseScreen({super.key, this.existingExpense});
@@ -330,35 +331,13 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
               _Label('Receipt Attachment'),
               const SizedBox(height: 8),
               if (_receiptPath != null)
-                Stack(
-                  alignment: Alignment.topRight,
-                  children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: Image.file(
-                        File(_receiptPath!),
-                        height: 120,
-                        width: double.infinity,
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.remove_circle),
-                      color: Colors.red,
-                      onPressed: () => setState(() => _receiptPath = null),
-                    ),
-                  ],
+                ImageThumbnailCard(
+                  imagePath: _receiptPath!,
+                  onRemove: () => setState(() => _receiptPath = null),
+                  onPreview: () => showImagePreview(context, _receiptPath!),
                 )
               else
-                OutlinedButton.icon(
-                  onPressed: _pickReceipt,
-                  icon: const Icon(Icons.add_a_photo_rounded),
-                  label: const Text('Attach Receipt'),
-                  style: OutlinedButton.styleFrom(
-                    minimumSize: const Size.fromHeight(50),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                ),
+                ReceiptUploadButton(onPressed: _pickReceipt),
               const SizedBox(height: 32),
 
               // Save Button
