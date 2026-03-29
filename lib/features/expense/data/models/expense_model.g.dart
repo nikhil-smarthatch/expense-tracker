@@ -26,13 +26,16 @@ class ExpenseModelAdapter extends TypeAdapter<ExpenseModel> {
       receiptPath: fields[6] as String?,
       isCreditCard: fields[7] == null ? false : fields[7] as bool,
       isCreditCardSettled: fields[8] == null ? false : fields[8] as bool,
+      creditCardPaidAmount: fields[9] == null ? 0.0 : fields[9] as double,
+      isRecurring: fields[10] == null ? false : fields[10] as bool,
+      recurrenceInterval: fields[11] as String?,
     );
   }
 
   @override
   void write(BinaryWriter writer, ExpenseModel obj) {
     writer
-      ..writeByte(9)
+      ..writeByte(12)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -50,7 +53,13 @@ class ExpenseModelAdapter extends TypeAdapter<ExpenseModel> {
       ..writeByte(7)
       ..write(obj.isCreditCard)
       ..writeByte(8)
-      ..write(obj.isCreditCardSettled);
+      ..write(obj.isCreditCardSettled)
+      ..writeByte(9)
+      ..write(obj.creditCardPaidAmount)
+      ..writeByte(10)
+      ..write(obj.isRecurring)
+      ..writeByte(11)
+      ..write(obj.recurrenceInterval);
   }
 
   @override

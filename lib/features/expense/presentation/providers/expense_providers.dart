@@ -58,8 +58,45 @@ final selectedMonthProvider =
 
 class ExpenseNotifier extends AsyncNotifier<List<Expense>> {
   @override
-  Future<List<Expense>> build() =>
-      ref.watch(expenseRepositoryProvider).getAllExpenses();
+  Future<List<Expense>> build() async {
+    final data = await ref.watch(expenseRepositoryProvider).getAllExpenses();
+    Future.microtask(() => _processRecurring(data));
+    return data;
+  }
+
+  Future<void> _processRecurring(List<Expense> expenses) async {
+    bool hasUpdates = false;
+    final now = DateTime.now();
+
+    for (final e in expenses) {
+      if (e.isRecurring) {
+        DateTime? nextDate;
+        if (e.recurrenceInterval == 'daily') {
+          nextDate = e.date.add(const Duration(days: 1));
+        } else if (e.recurrenceInterval == 'weekly') {
+          nextDate = e.date.add(const Duration(days: 7));
+        } else if (e.recurrenceInterval == 'monthly') {
+          nextDate = DateTime(e.date.year, e.date.month + 1, e.date.day);
+        } else if (e.recurrenceInterval == 'yearly') {
+          nextDate = DateTime(e.date.year + 1, e.date.month, e.date.day);
+        }
+
+        if (nextDate != null && (now.isAfter(nextDate) || AppDateUtils.isSameDay(now, nextDate))) {
+          final clone = e.copyWith(
+            id: const Uuid().v4(),
+            date: nextDate,
+            isRecurring: true,
+          );
+          final updatedOld = e.copyWith(isRecurring: false);
+          
+          await ref.read(expenseRepositoryProvider).updateExpense(updatedOld);
+          await ref.read(expenseRepositoryProvider).addExpense(clone);
+          hasUpdates = true;
+        }
+      }
+    }
+    if (hasUpdates) await refresh();
+  }
 
   /// Refreshes the expense list from Hive.
   Future<void> refresh() => update((_) =>
@@ -73,6 +110,8 @@ class ExpenseNotifier extends AsyncNotifier<List<Expense>> {
     bool isIncome = false,
     String? receiptPath,
     bool isCreditCard = false,
+    bool isRecurring = false,
+    String? recurrenceInterval,
   }) async {
     final expense = Expense(
       id: const Uuid().v4(),
@@ -83,6 +122,8 @@ class ExpenseNotifier extends AsyncNotifier<List<Expense>> {
       isIncome: isIncome,
       receiptPath: receiptPath,
       isCreditCard: isCreditCard,
+      isRecurring: isRecurring,
+      recurrenceInterval: recurrenceInterval,
     );
     await ref.read(expenseRepositoryProvider).addExpense(expense);
     await refresh();
@@ -98,20 +139,45 @@ class ExpenseNotifier extends AsyncNotifier<List<Expense>> {
     await refresh();
   }
 
-  /// Settles all provided unmatched credit card spends into one master bill
-  Future<void> settleCreditCardBill(List<Expense> spends, DateTime date) async {
-    double total = 0.0;
-    for (final e in spends) {
+  /// Settles credit card spends using FIFO logic
+  Future<void> settleCreditCardBill(List<Expense> spends, DateTime date, {double? paymentAmount}) async {
+    final sortedSpends = List<Expense>.from(spends)..sort((a, b) => a.date.compareTo(b.date));
+    double amountLeftToApply = paymentAmount ?? double.infinity;
+    double totalPaidThisSession = 0.0;
+
+    for (final e in sortedSpends) {
+      if (amountLeftToApply <= 0) break;
       if (!e.isCreditCardSettled) {
-        total += e.amount;
-        final updated = e.copyWith(isCreditCardSettled: true);
+        final remainingOnItem = e.amount - e.creditCardPaidAmount;
+        if (remainingOnItem <= 0) continue;
+
+        double appliedToItem = 0.0;
+        bool becomesSettled = false;
+
+        if (paymentAmount == null || amountLeftToApply >= remainingOnItem) {
+          appliedToItem = remainingOnItem;
+          amountLeftToApply -= remainingOnItem;
+          becomesSettled = true;
+        } else {
+          appliedToItem = amountLeftToApply;
+          amountLeftToApply = 0;
+          becomesSettled = false;
+        }
+
+        totalPaidThisSession += appliedToItem;
+        
+        final updated = e.copyWith(
+          creditCardPaidAmount: e.creditCardPaidAmount + appliedToItem,
+          isCreditCardSettled: becomesSettled,
+        );
         await ref.read(expenseRepositoryProvider).updateExpense(updated);
       }
     }
-    if (total > 0) {
+
+    if (totalPaidThisSession > 0) {
       final billExpense = Expense(
         id: const Uuid().v4(),
-        amount: total,
+        amount: totalPaidThisSession,
         category: ExpenseCategory.bills,
         date: date,
         note: 'Credit Card Bill Payment',
@@ -245,7 +311,7 @@ final unpaidCreditCardSpendsProvider = Provider<List<Expense>>((ref) {
 /// Total outstanding credit card bill
 final totalUnpaidCreditCardProvider = Provider<double>((ref) {
   final unpaid = ref.watch(unpaidCreditCardSpendsProvider);
-  return unpaid.fold(0.0, (sum, e) => sum + e.amount);
+  return unpaid.fold(0.0, (sum, e) => sum + (e.amount - e.creditCardPaidAmount));
 });
 
 // ─────────────────────────────────────────────

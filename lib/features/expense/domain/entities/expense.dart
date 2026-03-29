@@ -13,6 +13,9 @@ class Expense {
     this.receiptPath,
     this.isCreditCard = false,
     this.isCreditCardSettled = false,
+    this.creditCardPaidAmount = 0.0,
+    this.isRecurring = false,
+    this.recurrenceInterval,
   });
 
   final String id;
@@ -24,6 +27,9 @@ class Expense {
   final String? receiptPath;
   final bool isCreditCard;
   final bool isCreditCardSettled;
+  final double creditCardPaidAmount;
+  final bool isRecurring;
+  final String? recurrenceInterval;
 
   /// Returns a copy of this expense with updated fields.
   Expense copyWith({
@@ -38,6 +44,9 @@ class Expense {
     bool clearReceipt = false,
     bool? isCreditCard,
     bool? isCreditCardSettled,
+    double? creditCardPaidAmount,
+    bool? isRecurring,
+    String? recurrenceInterval,
   }) {
     return Expense(
       id: id ?? this.id,
@@ -49,6 +58,9 @@ class Expense {
       receiptPath: clearReceipt ? null : (receiptPath ?? this.receiptPath),
       isCreditCard: isCreditCard ?? this.isCreditCard,
       isCreditCardSettled: isCreditCardSettled ?? this.isCreditCardSettled,
+      creditCardPaidAmount: creditCardPaidAmount ?? this.creditCardPaidAmount,
+      isRecurring: isRecurring ?? this.isRecurring,
+      recurrenceInterval: recurrenceInterval ?? this.recurrenceInterval,
     );
   }
 

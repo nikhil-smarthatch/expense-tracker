@@ -32,6 +32,8 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
   bool _isIncome = false;
   String? _receiptPath;
   bool _isCreditCard = false;
+  bool _isRecurring = false;
+  String _recurrenceInterval = 'monthly';
 
   bool get _isEditing => widget.existingExpense != null;
 
@@ -44,6 +46,8 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
     _isIncome = e?.isIncome ?? false;
     _receiptPath = e?.receiptPath;
     _isCreditCard = e?.isCreditCard ?? false;
+    _isRecurring = e?.isRecurring ?? false;
+    _recurrenceInterval = e?.recurrenceInterval ?? 'monthly';
 
     if (e != null) {
       _amountController.text = e.amount.toStringAsFixed(2);
@@ -112,6 +116,8 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
           receiptPath: _receiptPath,
           clearReceipt: _receiptPath == null,
           isCreditCard: _isCreditCard,
+          isRecurring: _isRecurring,
+          recurrenceInterval: _isRecurring ? _recurrenceInterval : null,
         );
         await ref.read(expensesProvider.notifier).updateExpense(updated);
       } else {
@@ -123,6 +129,8 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
               isIncome: _isIncome,
               receiptPath: _receiptPath,
               isCreditCard: _isCreditCard,
+              isRecurring: _isRecurring,
+              recurrenceInterval: _isRecurring ? _recurrenceInterval : null,
             );
       }
       if (mounted) Navigator.of(context).pop();
@@ -204,6 +212,31 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
                   onChanged: (val) => setState(() => _isCreditCard = val),
                   contentPadding: const EdgeInsets.symmetric(horizontal: 8),
                 ),
+                SwitchListTile(
+                  title: const Text('Recurring Subscription?'),
+                  subtitle: const Text('Auto-logs this expense periodically'),
+                  value: _isRecurring,
+                  activeColor: cs.primary,
+                  onChanged: (val) => setState(() => _isRecurring = val),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                ),
+                if (_isRecurring)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                    child: DropdownButtonFormField<String>(
+                      value: _recurrenceInterval,
+                      decoration: const InputDecoration(labelText: 'Repeats Every'),
+                      items: const [
+                        DropdownMenuItem(value: 'daily', child: Text('Day')),
+                        DropdownMenuItem(value: 'weekly', child: Text('Week')),
+                        DropdownMenuItem(value: 'monthly', child: Text('Month')),
+                        DropdownMenuItem(value: 'yearly', child: Text('Year')),
+                      ],
+                      onChanged: (val) {
+                        if (val != null) setState(() => _recurrenceInterval = val);
+                      },
+                    ),
+                  ),
                 const SizedBox(height: 16),
               ],
 

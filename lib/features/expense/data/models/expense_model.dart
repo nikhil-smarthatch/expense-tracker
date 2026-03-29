@@ -37,6 +37,15 @@ class ExpenseModel extends HiveObject {
   @HiveField(8, defaultValue: false)
   bool isCreditCardSettled;
 
+  @HiveField(9, defaultValue: 0.0)
+  double creditCardPaidAmount;
+
+  @HiveField(10, defaultValue: false)
+  bool isRecurring;
+
+  @HiveField(11)
+  String? recurrenceInterval;
+
   ExpenseModel({
     required this.id,
     required this.amount,
@@ -47,6 +56,9 @@ class ExpenseModel extends HiveObject {
     this.receiptPath,
     this.isCreditCard = false,
     this.isCreditCardSettled = false,
+    this.creditCardPaidAmount = 0.0,
+    this.isRecurring = false,
+    this.recurrenceInterval,
   });
 
   /// Creates an [ExpenseModel] from a domain [Expense].
@@ -60,6 +72,9 @@ class ExpenseModel extends HiveObject {
         receiptPath: expense.receiptPath,
         isCreditCard: expense.isCreditCard,
         isCreditCardSettled: expense.isCreditCardSettled,
+        creditCardPaidAmount: expense.creditCardPaidAmount,
+        isRecurring: expense.isRecurring,
+        recurrenceInterval: expense.recurrenceInterval,
       );
 
   /// Converts this model back to the domain [Expense] entity.
@@ -73,5 +88,8 @@ class ExpenseModel extends HiveObject {
         receiptPath: receiptPath,
         isCreditCard: isCreditCard,
         isCreditCardSettled: isCreditCardSettled,
+        creditCardPaidAmount: creditCardPaidAmount,
+        isRecurring: isRecurring,
+        recurrenceInterval: recurrenceInterval,
       );
 }

@@ -99,6 +99,25 @@ class ExpenseCard extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
+                      if (expense.isCreditCard && expense.creditCardPaidAmount > 0)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 2),
+                          child: Text(
+                            '(Paid ${CurrencyFormatter.format(expense.creditCardPaidAmount)} of ${CurrencyFormatter.format(expense.amount)})',
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(color: cs.primary, fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                      if (expense.isRecurring)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 2),
+                          child: Row(
+                            children: [
+                              Icon(Icons.autorenew_rounded, size: 14, color: cs.primary),
+                              const SizedBox(width: 4),
+                              Text('Repeats ${expense.recurrenceInterval}', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: cs.primary)),
+                            ],
+                          ),
+                        ),
                     ],
                   ),
                 ),
