@@ -13,6 +13,7 @@ import 'features/loan/data/models/loan_model.dart';
 import 'features/loan/data/models/repayment_model.dart';
 import 'features/credit_card/presentation/screens/credit_card_list_screen.dart';
 import 'features/income/presentation/screens/income_list_screen.dart';
+import 'features/income/data/models/savings_goal_model.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,10 +23,12 @@ Future<void> main() async {
   Hive.registerAdapter(ExpenseModelAdapter());
   Hive.registerAdapter(LoanModelAdapter());
   Hive.registerAdapter(RepaymentModelAdapter());
+  Hive.registerAdapter(SavingsGoalModelAdapter());
   await Hive.openBox<ExpenseModel>(AppConstants.hiveExpenseBox);
   await Hive.openBox<double>(AppConstants.hiveBudgetBox);
   await Hive.openBox<LoanModel>(AppConstants.hiveLoansBox);
   await Hive.openBox<RepaymentModel>(AppConstants.hiveRepaymentsBox);
+  await Hive.openBox<SavingsGoalModel>(AppConstants.hiveSavingsGoalsBox);
 
   runApp(
     const ProviderScope(
@@ -130,17 +133,27 @@ class _AppShellState extends State<AppShell> {
           ),
         ],
       ),
-      floatingActionButton: _currentIndex == 0 ? null : FloatingActionButton(
-        onPressed: () {
-          if (_currentIndex == 1 || _currentIndex == 2 || _currentIndex == 4) {
-            Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AddEditExpenseScreen()));
-          } else if (_currentIndex == 3) {
-            Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AddEditLoanScreen()));
-          }
-        },
-        tooltip: _currentIndex == 1 ? 'Add Expense' : (_currentIndex == 2 ? 'Add Income' : (_currentIndex == 3 ? 'Add Loan' : 'Add CC Spend')),
-        child: const Icon(Icons.add_rounded),
-      ),
+      floatingActionButton: _currentIndex == 0
+          ? null
+          : FloatingActionButton(
+              onPressed: () {
+                if (_currentIndex == 1 ||
+                    _currentIndex == 2 ||
+                    _currentIndex == 4) {
+                  Navigator.of(context).push(MaterialPageRoute(
+                      builder: (_) => const AddEditExpenseScreen()));
+                } else if (_currentIndex == 3) {
+                  Navigator.of(context).push(MaterialPageRoute(
+                      builder: (_) => const AddEditLoanScreen()));
+                }
+              },
+              tooltip: _currentIndex == 1
+                  ? 'Add Expense'
+                  : (_currentIndex == 2
+                      ? 'Add Income'
+                      : (_currentIndex == 3 ? 'Add Loan' : 'Add CC Spend')),
+              child: const Icon(Icons.add_rounded),
+            ),
     );
   }
 }

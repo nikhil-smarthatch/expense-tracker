@@ -6,6 +6,10 @@ import '../../../expense/presentation/screens/add_edit_expense_screen.dart';
 import '../../../expense/presentation/widgets/image_preview_widget.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../providers/income_providers.dart';
+import '../providers/savings_goal_providers.dart';
+import '../widgets/goal_progress_card.dart';
+import 'savings_goal_screen.dart';
+import 'add_edit_goal_screen.dart';
 
 class IncomeListScreen extends ConsumerWidget {
   const IncomeListScreen({super.key});
@@ -14,12 +18,24 @@ class IncomeListScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final incomesAsync = ref.watch(sortedIncomeProvider);
     final incomeStatsAsync = ref.watch(incomeStatsProvider);
+    final primaryGoalAsync = ref.watch(primarySavingsGoalProvider);
     final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Income'),
         elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.add_circle_outline),
+            tooltip: 'Add Savings Goal',
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => const AddEditGoalScreen(),
+              ),
+            ),
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => Navigator.of(context).push(
@@ -44,6 +60,98 @@ class IncomeListScreen extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Primary Savings Goal (if exists)
+                  primaryGoalAsync.when(
+                    loading: () => const SizedBox.shrink(),
+                    error: (_, __) => const SizedBox.shrink(),
+                    data: (goal) {
+                      if (goal == null) return const SizedBox.shrink();
+                      return Column(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 16),
+                            child: GestureDetector(
+                              onTap: () => Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) =>
+                                      const SavingsGoalScreenPanel(),
+                                ),
+                              ),
+                              child: Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      cs.primaryContainer,
+                                      cs.primaryContainer.withOpacity(0.7),
+                                    ],
+                                  ),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.savings_outlined,
+                                      color: cs.primary,
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            goal.title,
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .labelLarge
+                                                ?.copyWith(
+                                                  fontWeight: FontWeight.w600,
+                                                ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          ClipRRect(
+                                            borderRadius:
+                                                BorderRadius.circular(4),
+                                            child: LinearProgressIndicator(
+                                              value: (goal.progressPercentage /
+                                                      100)
+                                                  .clamp(0.0, 1.0),
+                                              minHeight: 4,
+                                              backgroundColor:
+                                                  cs.primary.withOpacity(0.2),
+                                              valueColor:
+                                                  AlwaysStoppedAnimation<Color>(
+                                                cs.primary,
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            '${goal.progressPercentage.toStringAsFixed(0)}% of ${CurrencyFormatter.format(goal.targetAmount)}',
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .labelSmall,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Icon(
+                                      Icons.arrow_forward_ios,
+                                      size: 14,
+                                      color: cs.primary,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+
                   // Income Summary Cards
                   _IncomeStatsCard(stats: stats, colorScheme: cs),
                   const SizedBox(height: 24),
@@ -68,7 +176,10 @@ class IncomeListScreen extends ConsumerWidget {
                             const SizedBox(height: 8),
                             Text(
                               'Start adding your income sources',
-                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyMedium
+                                  ?.copyWith(
                                     color: cs.onSurfaceVariant,
                                   ),
                             ),
@@ -102,8 +213,8 @@ class IncomeListScreen extends ConsumerWidget {
                         income: incomes[index],
                         onTap: () => Navigator.of(context).push(
                           MaterialPageRoute(
-                            builder: (_) =>
-                                AddEditExpenseScreen(existingExpense: incomes[index]),
+                            builder: (_) => AddEditExpenseScreen(
+                                existingExpense: incomes[index]),
                           ),
                         ),
                       ),
@@ -164,7 +275,10 @@ class _IncomeStatsCard extends StatelessWidget {
                           ),
                           Text(
                             CurrencyFormatter.format(stats.monthlyIncome),
-                            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                            style: Theme.of(context)
+                                .textTheme
+                                .headlineSmall
+                                ?.copyWith(
                                   fontWeight: FontWeight.bold,
                                 ),
                           ),
@@ -176,7 +290,8 @@ class _IncomeStatsCard extends StatelessWidget {
                 const SizedBox(height: 12),
                 LinearProgressIndicator(
                   value: stats.averageMonthlyIncome > 0
-                      ? (stats.monthlyIncome / stats.averageMonthlyIncome).clamp(0.0, 1.0)
+                      ? (stats.monthlyIncome / stats.averageMonthlyIncome)
+                          .clamp(0.0, 1.0)
                       : 0,
                   borderRadius: BorderRadius.circular(4),
                 ),
@@ -298,16 +413,18 @@ class _IncomeCard extends StatelessWidget {
                       children: [
                         Text(
                           income.category.label,
-                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                fontWeight: FontWeight.w600,
-                              ),
+                          style:
+                              Theme.of(context).textTheme.titleSmall?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                  ),
                         ),
                         const SizedBox(height: 2),
                         Text(
                           DateFormat('MMM dd, yyyy').format(income.date),
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: cs.onSurfaceVariant,
-                              ),
+                          style:
+                              Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: cs.onSurfaceVariant,
+                                  ),
                         ),
                       ],
                     ),
@@ -358,10 +475,11 @@ class _IncomeCard extends StatelessWidget {
                           const SizedBox(width: 6),
                           Text(
                             'View Receipt',
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  color: cs.primary,
-                                  fontWeight: FontWeight.w500,
-                                ),
+                            style:
+                                Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      color: cs.primary,
+                                      fontWeight: FontWeight.w500,
+                                    ),
                           ),
                         ],
                       ),

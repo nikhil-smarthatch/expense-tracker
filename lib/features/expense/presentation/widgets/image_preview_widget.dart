@@ -212,7 +212,8 @@ class _ImageGalleryPreviewState extends State<ImageGalleryPreview> {
               Positioned(
                 right: 8,
                 child: IconButton(
-                  icon: const Icon(Icons.arrow_forward_ios, color: Colors.white),
+                  icon:
+                      const Icon(Icons.arrow_forward_ios, color: Colors.white),
                   onPressed: _currentIndex < widget.imagePaths.length - 1
                       ? () => setState(() => _currentIndex++)
                       : null,

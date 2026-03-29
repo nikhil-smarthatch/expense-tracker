@@ -21,7 +21,7 @@ class AddEditExpenseScreen extends ConsumerStatefulWidget {
 }
 
 class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
-  final _formKey = GlobalKey<FormState>();
+  final _formKey = GlobalKey<FormState>(); // Key for form validation
   final _amountController = TextEditingController();
   final _noteController = TextEditingController();
   final ImagePicker _picker = ImagePicker();
@@ -29,7 +29,7 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
   late ExpenseCategory _selectedCategory;
   late DateTime _selectedDate;
   bool _isSaving = false;
-  
+
   bool _isIncome = false;
   String? _receiptPath;
   bool _isCreditCard = false;
@@ -42,6 +42,7 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
   void initState() {
     super.initState();
     final e = widget.existingExpense;
+
     _selectedCategory = e?.category ?? ExpenseCategory.food;
     _selectedDate = e?.date ?? DateTime.now();
     _isIncome = e?.isIncome ?? false;
@@ -163,8 +164,8 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
                           onPressed: () => Navigator.of(context).pop(false),
                           child: const Text('Cancel')),
                       FilledButton(
-                          style: FilledButton.styleFrom(
-                              backgroundColor: cs.error),
+                          style:
+                              FilledButton.styleFrom(backgroundColor: cs.error),
                           onPressed: () => Navigator.of(context).pop(true),
                           child: const Text('Delete')),
                     ],
@@ -191,8 +192,14 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
               Center(
                 child: SegmentedButton<bool>(
                   segments: const [
-                    ButtonSegment(value: false, label: Text('Expense'), icon: Icon(Icons.arrow_upward_rounded)),
-                    ButtonSegment(value: true, label: Text('Income'), icon: Icon(Icons.arrow_downward_rounded)),
+                    ButtonSegment(
+                        value: false,
+                        label: Text('Expense'),
+                        icon: Icon(Icons.arrow_upward_rounded)),
+                    ButtonSegment(
+                        value: true,
+                        label: Text('Income'),
+                        icon: Icon(Icons.arrow_downward_rounded)),
                   ],
                   selected: {_isIncome},
                   onSelectionChanged: (Set<bool> newSelection) {
@@ -207,7 +214,8 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
               if (!_isIncome) ...[
                 SwitchListTile(
                   title: const Text('Paid via Credit Card?'),
-                  subtitle: const Text('Delays budget impact until the bill is paid'),
+                  subtitle:
+                      const Text('Delays budget impact until the bill is paid'),
                   value: _isCreditCard,
                   activeColor: cs.primary,
                   onChanged: (val) => setState(() => _isCreditCard = val),
@@ -223,18 +231,22 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
                 ),
                 if (_isRecurring)
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                     child: DropdownButtonFormField<String>(
                       value: _recurrenceInterval,
-                      decoration: const InputDecoration(labelText: 'Repeats Every'),
+                      decoration:
+                          const InputDecoration(labelText: 'Repeats Every'),
                       items: const [
                         DropdownMenuItem(value: 'daily', child: Text('Day')),
                         DropdownMenuItem(value: 'weekly', child: Text('Week')),
-                        DropdownMenuItem(value: 'monthly', child: Text('Month')),
+                        DropdownMenuItem(
+                            value: 'monthly', child: Text('Month')),
                         DropdownMenuItem(value: 'yearly', child: Text('Year')),
                       ],
                       onChanged: (val) {
-                        if (val != null) setState(() => _recurrenceInterval = val);
+                        if (val != null)
+                          setState(() => _recurrenceInterval = val);
                       },
                     ),
                   ),
@@ -289,8 +301,8 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
                 onTap: _selectDate,
                 borderRadius: BorderRadius.circular(12),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 14),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                   decoration: BoxDecoration(
                     color: cs.surfaceContainerHighest,
                     borderRadius: BorderRadius.circular(12),

@@ -25,7 +25,8 @@ final monthlyIncomeProvider = FutureProvider<double>((ref) async {
   final incomes = await ref.watch(incomeListProvider.future);
   double total = 0.0;
   for (final e in incomes) {
-    if (e.date.isAfter(startOfMonth) && e.date.isBefore(endOfMonth.add(const Duration(days: 1)))) {
+    if (e.date.isAfter(startOfMonth) &&
+        e.date.isBefore(endOfMonth.add(const Duration(days: 1)))) {
       total += e.amount;
     }
   }
@@ -54,7 +55,8 @@ final averageMonthlyIncomeProvider = FutureProvider<double>((ref) async {
   final now = DateTime.now();
   final sixMonthsAgo = DateTime(now.year, now.month - 6, 1);
 
-  final recentIncomes = incomes.where((e) => e.date.isAfter(sixMonthsAgo)).toList();
+  final recentIncomes =
+      incomes.where((e) => e.date.isAfter(sixMonthsAgo)).toList();
 
   if (recentIncomes.isEmpty) return 0.0;
 
@@ -65,27 +67,30 @@ final averageMonthlyIncomeProvider = FutureProvider<double>((ref) async {
     months.add(monthKey);
   }
 
-  final totalIncome =
-      recentIncomes.fold(0.0, (sum, e) => sum + e.amount);
+  final totalIncome = recentIncomes.fold(0.0, (sum, e) => sum + e.amount);
   return months.isNotEmpty ? totalIncome / months.length : 0.0;
 });
 
 /// Get income for specific date range
 final incomeByDateRangeProvider =
-    FutureProvider.family<List<Expense>, (DateTime, DateTime)>((ref, dateRange) async {
+    FutureProvider.family<List<Expense>, (DateTime, DateTime)>(
+        (ref, dateRange) async {
   final (startDate, endDate) = dateRange;
   final incomes = await ref.watch(incomeListProvider.future);
 
   return incomes
       .where((e) =>
-          e.date.isAfter(startDate) && e.date.isBefore(endDate.add(const Duration(days: 1))))
+          e.date.isAfter(startDate) &&
+          e.date.isBefore(endDate.add(const Duration(days: 1))))
       .toList();
 });
 
 /// Get income with receipts/attachments
 final incomeWithReceiptsProvider = FutureProvider<List<Expense>>((ref) async {
   final incomes = await ref.watch(incomeListProvider.future);
-  return incomes.where((e) => e.receiptPath != null && e.receiptPath!.isNotEmpty).toList();
+  return incomes
+      .where((e) => e.receiptPath != null && e.receiptPath!.isNotEmpty)
+      .toList();
 });
 
 /// Get income statistics for dashboard
@@ -104,9 +109,10 @@ final incomeStatsProvider = FutureProvider<IncomeStats>((ref) async {
     monthlyIncome: monthlyTotal,
     averageMonthlyIncome: avgMonthly,
     incomeCount: allIncomes.length,
-    monthlyIncomeCount:
-        allIncomes.where((e) =>
-            e.date.isAfter(startOfMonth) && e.date.isBefore(endOfMonth.add(const Duration(days: 1))))
+    monthlyIncomeCount: allIncomes
+        .where((e) =>
+            e.date.isAfter(startOfMonth) &&
+            e.date.isBefore(endOfMonth.add(const Duration(days: 1))))
         .length,
   );
 });

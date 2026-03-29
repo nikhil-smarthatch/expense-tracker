@@ -1,6 +1,7 @@
 # Income Management & Image Preview Implementation
 
 ## Overview
+
 This document describes the new Income Management and Image Preview features added to the Expense Tracker app.
 
 ---
@@ -8,6 +9,7 @@ This document describes the new Income Management and Image Preview features add
 ## 📊 Income Management Feature
 
 ### How Income is Tracked
+
 The app tracks income as transactions marked with an `isIncome` flag. Instead of a separate database table, income shares the same expense tracking system with the following characteristics:
 
 - **Storage**: Income is stored in the same Hive box as expenses (`hiveExpenseBox`)
@@ -15,9 +17,11 @@ The app tracks income as transactions marked with an `isIncome` flag. Instead of
 - **Display**: The Income screen displays only transactions where `isIncome = true`
 
 ### Income List Screen
+
 A dedicated **Income** tab in the bottom navigation bar shows all income transactions.
 
 #### Features:
+
 1. **Income Summary Cards**
    - **Current Month Income**: Shows total income for the current month with a progress bar compared to average
    - **Total Income**: Cumulative income since the app started
@@ -29,6 +33,7 @@ A dedicated **Income** tab in the bottom navigation bar shows all income transac
    - Tap any entry to edit or view details
 
 #### Income Providers (State Management)
+
 All income data is managed through Riverpod providers in `lib/features/income/presentation/providers/income_providers.dart`:
 
 ```dart
@@ -84,9 +89,11 @@ incomeStatsProvider
 ## 📸 Image Preview Feature
 
 ### Receipt Upload & Storage
+
 Users can attach receipt images to both income and expense transactions for record-keeping.
 
 #### Features:
+
 1. **Image Compression**: Images are automatically compressed to 50% quality and max 800px width to save storage
 2. **Persistent Storage**: Receipts are saved to the app's documents directory
 3. **Path Tracking**: Receipt paths are stored in the transaction database
@@ -94,6 +101,7 @@ Users can attach receipt images to both income and expense transactions for reco
 ### Image Preview Widgets
 
 #### 1. **ImageThumbnailCard** - Interactive Thumbnail
+
 ```dart
 ImageThumbnailCard(
   imagePath: receiptPath,
@@ -103,35 +111,44 @@ ImageThumbnailCard(
   width: double.infinity,
 )
 ```
+
 - Shows compressed preview of the image
 - Click to open full-screen preview
 - Remove button in top-right corner
 - Zoom-in indicator overlay
 
 #### 2. **showImagePreview()** - Full-Screen Dialog
+
 Opens a full-screen image viewer with zoom capabilities:
+
 ```dart
 showImagePreview(context, imagePath)
 ```
+
 - Full-screen view
 - Pinch-to-zoom support (1x to 3x magnification)
 - Interactive pan and zoom using InteractiveViewer
 - Close button to return
 
 #### 3. **ReceiptUploadButton** - Upload Trigger
+
 Simple, reusable button to trigger image picker:
+
 ```dart
 ReceiptUploadButton(onPressed: _pickReceipt)
 ```
 
 #### 4. **ImageGalleryPreview** - Multiple Images (Future)
+
 For future multi-image support:
+
 ```dart
 ImageGalleryPreview(
   imagePaths: [path1, path2, path3],
   onRemove: (index) => removeImage(index),
 )
 ```
+
 - Browse multiple attached images
 - Previous/Next navigation
 - Swipe support (future enhancement)
@@ -139,6 +156,7 @@ ImageGalleryPreview(
 ### Using Images in Transactions
 
 #### Adding a Receipt
+
 1. In Add/Edit Transaction screen, scroll to "Receipt Attachment" section
 2. Tap **"Attach Receipt"** button
 3. Select image from gallery
@@ -146,6 +164,7 @@ ImageGalleryPreview(
 5. Preview thumbnail appears immediately
 
 #### Viewing a Receipt
+
 1. **Option 1**: In Add/Edit form, tap the receipt thumbnail to zoom
 2. **Option 2**: In Income/Expense list, tap **"View Receipt"** button
 3. Full-screen viewer opens with pinch-zoom capability
@@ -154,6 +173,7 @@ ImageGalleryPreview(
 6. Tap close button to return
 
 #### Removing a Receipt
+
 1. In Add/Edit form, tap the **red X** button on the thumbnail
 2. Image is removed from transaction
 3. Receipt is deleted from disk on save
@@ -173,6 +193,7 @@ String? receiptPath;  // Path to attached receipt image
 ```
 
 ### Hive Box Usage
+
 - **Box Name**: `hiveExpenseBox`
 - **All transactions** (income + expenses) stored together
 - **Filtered in UI** by the `isIncome` flag
@@ -182,12 +203,15 @@ String? receiptPath;  // Path to attached receipt image
 ## 🔍 Dashboard Integration
 
 The dashboard already displays:
+
 - **Monthly Income**: `monthlyIncomeProvider` from expenses with `isIncome=true`
 - **Income vs. Expense Balance**: Calculated as `income - expenses`
 - **Net Balance Card**: Shows total balance including income
 
 ### Future Enhancements for Dashboard
+
 Could add:
+
 - Income trend chart over time
 - Income source pie chart
 - Top income categories
@@ -198,24 +222,28 @@ Could add:
 ## 🎯 Use Cases
 
 ### Tracking Salary
+
 1. Create monthly income entry
 2. Select "Salary" category
 3. Add month and year to notes
 4. Attach pay slip or bank statement screenshot
 
 ### Freelance Income
+
 1. Add entry for each completed project
 2. Category: "Freelance" or appropriate type
 3. Note: Project name/client
 4. Receipt: Optional invoice or payment proof
 
 ### Investment Returns
+
 1. Category: "Investment" or "Bonus"
 2. Note: What investment returned
 3. Date: Transaction date
 4. Receipt: Optional statement screenshot
 
 ### Gift/Reimbursement
+
 1. Add as income transaction
 2. Note: Who sent it or reason
 3. Receipt: Screenshot of transfer if needed
@@ -226,6 +254,7 @@ Could add:
 ## 🛠️ Technical Details
 
 ### File Structure
+
 ```
 lib/features/
 ├── income/
@@ -243,11 +272,13 @@ lib/features/
 ```
 
 ### State Management
+
 - **Framework**: Riverpod (Provider)
 - **Caching**: Automatic via FutureProvider
 - **Refresh**: Pull-to-refresh on Income list screen
 
 ### Image Storage
+
 - **Location**: App documents directory
 - **Naming**: `{timestamp}_{originalFilename}`
 - **Format**: Original format (JPEG/PNG)
@@ -258,16 +289,19 @@ lib/features/
 ## 🐛 Troubleshooting
 
 ### Images not showing in Income list
+
 - Ensure receipt path is set (`receiptPath != null`)
 - Check file still exists in app documents directory
 - Try re-attaching the image
 
 ### Income not appearing on Income screen
+
 - Verify transaction is saved with `isIncome = true`
 - Pull down to refresh the list
 - Check transaction date is not in future or very old (> year 2000)
 
 ### Performance issues with large receipts
+
 - App automatically compresses images to improve performance
 - If still slow, consider clearing old transactions
 
@@ -292,6 +326,6 @@ The app now provides **complete income management** with:
 ✅ Monthly income visualization  
 ✅ Receipt/image attachment support  
 ✅ Full-screen image previews with zoom  
-✅ Persistent storage of income history  
+✅ Persistent storage of income history
 
 All income data is displayed in the bottom navigation **Income** tab alongside Expenses, Loans, and Cards.

@@ -7,6 +7,7 @@ class AppConstants {
   static const String hiveBudgetBox = 'budgets';
   static const String hiveLoansBox = 'loans';
   static const String hiveRepaymentsBox = 'repayments';
+  static const String hiveSavingsGoalsBox = 'savings_goals';
 
   /// Default budget limit (monthly, in rupees)
   static const double defaultBudgetLimit = 30000.0;
