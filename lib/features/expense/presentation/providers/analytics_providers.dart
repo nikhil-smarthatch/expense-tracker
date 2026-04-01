@@ -77,8 +77,8 @@ final monthOverMonthChangeProvider = Provider<double>((ref) {
 
   if (lastMonth.totalExpense == 0) return 0.0;
 
-  final change = ((currentMonth.totalExpense - lastMonth.totalExpense) /
-      lastMonth.totalExpense);
+  final change = (currentMonth.totalExpense - lastMonth.totalExpense) /
+      lastMonth.totalExpense;
   return change;
 });
 

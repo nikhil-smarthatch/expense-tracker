@@ -175,9 +175,9 @@ class SpendingAnalyzer {
     final now = DateTime.now();
     if (deadline.isBefore(now)) return 0;
 
-    final monthsLeft = ((deadline.year - now.year) * 12 +
+    final monthsLeft = (deadline.year - now.year) * 12 +
         (deadline.month - now.month) +
-        (deadline.day >= now.day ? 0 : -1));
+        (deadline.day >= now.day ? 0 : -1);
     if (monthsLeft <= 0) return 0;
 
     return goal.remainingAmount / monthsLeft;

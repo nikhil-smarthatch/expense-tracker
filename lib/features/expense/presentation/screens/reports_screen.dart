@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 import '../providers/expense_providers.dart';
 import '../../data/services/report_export_service.dart';
+import '../../domain/entities/expense.dart';
 import '../../../../core/utils/currency_formatter.dart';
 
 class ReportsScreen extends ConsumerStatefulWidget {
@@ -175,7 +176,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
 }
 
 class _SummaryCard extends StatelessWidget {
-  final List<dynamic> expenses;
+  final List<Expense> expenses;
   final ColorScheme cs;
 
   const _SummaryCard({required this.expenses, required this.cs});

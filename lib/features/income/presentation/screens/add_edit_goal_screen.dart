@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 import '../../domain/entities/savings_goal.dart';
+import '../../../../core/constants/app_constants.dart';
 import '../providers/savings_goal_providers.dart';
 
 class AddEditGoalScreen extends ConsumerStatefulWidget {
@@ -13,6 +15,18 @@ class AddEditGoalScreen extends ConsumerStatefulWidget {
 }
 
 class _AddEditGoalScreenState extends ConsumerState<AddEditGoalScreen> {
+  static const List<String> _goalCategories = [
+    'Emergency Fund',
+    'Vacation',
+    'House',
+    'Education',
+    'Car',
+    'Business',
+    'Retirement',
+    'Other',
+  ];
+  static const List<String> _goalPriorities = ['high', 'medium', 'low'];
+
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _titleController;
   late TextEditingController _descriptionController;
@@ -20,20 +34,23 @@ class _AddEditGoalScreenState extends ConsumerState<AddEditGoalScreen> {
 
   late String _selectedCategory;
   late String _selectedPriority;
-  late int _selectedMonthsAhead;
   bool _hasDeadline = false;
   late DateTime _selectedDeadline;
   bool _isSaving = false;
 
   bool get _isEditing => widget.existingGoal != null;
+  // Use a late final to ensure it's initialized but not changed later.
 
   @override
   void initState() {
     super.initState();
     _titleController = TextEditingController();
     _descriptionController = TextEditingController();
-    _targetAmountController = TextEditingController();
-
+    _targetAmountController = TextEditingController()
+      ..addListener(() {
+        // Rebuild to update the required monthly savings info
+        if (mounted) setState(() {});
+      });
     final goal = widget.existingGoal;
     if (goal != null) {
       _titleController.text = goal.title;
@@ -45,14 +62,12 @@ class _AddEditGoalScreenState extends ConsumerState<AddEditGoalScreen> {
       _selectedDeadline =
           goal.deadline ?? DateTime.now().add(const Duration(days: 30));
     } else {
-      // Default values for new goal
-      // Default values for new goal
-      _selectedCategory = 'Emergency Fund';
+      // Default values for a new goal
+      _selectedCategory = _goalCategories.first;
       _selectedPriority = 'medium';
-      _selectedMonthsAhead = 6;
-      _hasDeadline = true;
-      _selectedDeadline =
-          DateTime.now().add(Duration(days: _selectedMonthsAhead * 30));
+      _hasDeadline = false; // Start without a deadline by default.
+      _selectedDeadline = DateTime.now()
+          .add(const Duration(days: 365)); // Default to 1 year from now.
     }
   }
 
@@ -65,14 +80,19 @@ class _AddEditGoalScreenState extends ConsumerState<AddEditGoalScreen> {
   }
 
   Future<void> _selectDate() async {
+    final now = DateTime.now();
+    // Prevent assertion error if initialDate is slightly before firstDate
+    final firstDate = _selectedDeadline.isBefore(now) ? _selectedDeadline : now;
     final picked = await showDatePicker(
       context: context,
       initialDate: _selectedDeadline,
-      firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 3650)), // 10 years
+      firstDate: firstDate,
+      lastDate: now.add(const Duration(days: 3650)), // 10 years
     );
     if (picked != null) {
-      setState(() => _selectedDeadline = picked);
+      setState(() {
+        _selectedDeadline = picked;
+      });
     }
   }
 
@@ -122,6 +142,39 @@ class _AddEditGoalScreenState extends ConsumerState<AddEditGoalScreen> {
     }
   }
 
+  double? _calculateRequiredMonthlySavings() {
+    final targetAmount = double.tryParse(_targetAmountController.text.trim());
+    if (!_hasDeadline || targetAmount == null || targetAmount <= 0) return null;
+
+    final now = DateTime.now();
+    if (!_selectedDeadline.isAfter(now)) {
+      return null; // Deadline must be in the future
+    }
+
+    final differenceInDays = _selectedDeadline.difference(now).inDays;
+    if (differenceInDays <= 0) return null;
+
+    // Using 30.44 as the average number of days in a month
+    final months = differenceInDays / 30.44;
+    if (months <= 0) return null;
+
+    final currentAmount = _isEditing ? widget.existingGoal!.currentAmount : 0.0;
+    final remainingAmount = targetAmount - currentAmount;
+
+    if (remainingAmount <= 0) return 0.0;
+
+    return remainingAmount / months;
+  }
+
+  Future<void> _deleteGoalAndPop() async {
+    if (!mounted) return;
+    await ref
+        .read(savingsGoalNotifierProvider.notifier)
+        .deleteGoal(widget.existingGoal!.id);
+    if (!mounted) return;
+    Navigator.of(context).pop(true);
+  }
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
@@ -154,12 +207,8 @@ class _AddEditGoalScreenState extends ConsumerState<AddEditGoalScreen> {
                     ],
                   ),
                 );
-                if (confirmed == true && mounted) {
-                  final navigator = Navigator.of(context);
-                  await ref
-                      .read(savingsGoalNotifierProvider.notifier)
-                      .deleteGoal(widget.existingGoal!.id);
-                  if (mounted) navigator.pop(true);
+                if (confirmed == true) {
+                  await _deleteGoalAndPop();
                 }
               },
             ),
@@ -214,9 +263,9 @@ class _AddEditGoalScreenState extends ConsumerState<AddEditGoalScreen> {
                 enabled: !_isSaving,
                 keyboardType:
                     const TextInputType.numberWithOptions(decimal: true),
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   hintText: '0',
-                  prefixText: '₹ ',
+                  prefixText: '${AppConstants.currencySymbol} ',
                 ),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
@@ -239,19 +288,10 @@ class _AddEditGoalScreenState extends ConsumerState<AddEditGoalScreen> {
                 decoration: const InputDecoration(
                   labelText: 'Select category',
                 ),
-                items: const [
-                  DropdownMenuItem(
-                      value: 'Emergency Fund', child: Text('Emergency Fund')),
-                  DropdownMenuItem(value: 'Vacation', child: Text('Vacation')),
-                  DropdownMenuItem(value: 'House', child: Text('House')),
-                  DropdownMenuItem(
-                      value: 'Education', child: Text('Education')),
-                  DropdownMenuItem(value: 'Car', child: Text('Car')),
-                  DropdownMenuItem(value: 'Business', child: Text('Business')),
-                  DropdownMenuItem(
-                      value: 'Retirement', child: Text('Retirement')),
-                  DropdownMenuItem(value: 'Other', child: Text('Other')),
-                ],
+                items: _goalCategories
+                    .map(
+                        (cat) => DropdownMenuItem(value: cat, child: Text(cat)))
+                    .toList(),
                 onChanged: _isSaving
                     ? null
                     : (value) {
@@ -272,11 +312,11 @@ class _AddEditGoalScreenState extends ConsumerState<AddEditGoalScreen> {
                 decoration: const InputDecoration(
                   labelText: 'Select priority',
                 ),
-                items: const [
-                  DropdownMenuItem(value: 'high', child: Text('High')),
-                  DropdownMenuItem(value: 'medium', child: Text('Medium')),
-                  DropdownMenuItem(value: 'low', child: Text('Low')),
-                ],
+                items: _goalPriorities
+                    .map((p) => DropdownMenuItem(
+                        value: p,
+                        child: Text(p[0].toUpperCase() + p.substring(1))))
+                    .toList(),
                 onChanged: _isSaving
                     ? null
                     : (value) {
@@ -284,9 +324,7 @@ class _AddEditGoalScreenState extends ConsumerState<AddEditGoalScreen> {
                           setState(() => _selectedPriority = value);
                         }
                       },
-                disabledHint: Text(_selectedPriority.isEmpty
-                    ? 'Select priority'
-                    : _selectedPriority.toUpperCase()),
+                disabledHint: Text(_selectedPriority),
               ),
               const SizedBox(height: 24),
 
@@ -298,7 +336,9 @@ class _AddEditGoalScreenState extends ConsumerState<AddEditGoalScreen> {
                 activeThumbColor: cs.primary,
                 onChanged: _isSaving
                     ? null
-                    : (val) => setState(() => _hasDeadline = val),
+                    : (val) => setState(() {
+                          _hasDeadline = val;
+                        }),
                 contentPadding: const EdgeInsets.symmetric(horizontal: 8),
               ),
 
@@ -320,7 +360,7 @@ class _AddEditGoalScreenState extends ConsumerState<AddEditGoalScreen> {
                             size: 20, color: cs.primary),
                         const SizedBox(width: 12),
                         Text(
-                          '${_selectedDeadline.day}/${_selectedDeadline.month}/${_selectedDeadline.year}',
+                          DateFormat('MMM dd, yyyy').format(_selectedDeadline),
                           style: Theme.of(context).textTheme.bodyLarge,
                         ),
                         const Spacer(),
@@ -330,6 +370,8 @@ class _AddEditGoalScreenState extends ConsumerState<AddEditGoalScreen> {
                     ),
                   ),
                 ),
+                const SizedBox(height: 12),
+                _buildMonthlySavingsInfo(),
               ],
               const SizedBox(height: 32),
 
@@ -352,6 +394,49 @@ class _AddEditGoalScreenState extends ConsumerState<AddEditGoalScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildMonthlySavingsInfo() {
+    final requiredMonthly = _calculateRequiredMonthlySavings();
+    if (requiredMonthly == null) return const SizedBox.shrink();
+
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: cs.primaryContainer.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: cs.primaryContainer),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.info_outline_rounded, color: cs.primary),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Required Monthly Savings',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: cs.onSurfaceVariant,
+                  ),
+                ),
+                Text(
+                  '${AppConstants.currencySymbol}${requiredMonthly.toStringAsFixed(0)} / month',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: cs.primary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

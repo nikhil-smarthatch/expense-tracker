@@ -56,7 +56,7 @@ class _CategoryPieChartState extends State<CategoryPieChart> {
                 sections: List.generate(entries.length, (i) {
                   final isTouched = i == touchedIndex;
                   final entry = entries[i];
-                  final percentage = (entry.value / total * 100);
+                  final percentage = entry.value / total * 100;
 
                   return PieChartSectionData(
                     color: entry.key.color,

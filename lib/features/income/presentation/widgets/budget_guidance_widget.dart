@@ -136,9 +136,9 @@ class BudgetGuidanceWidget extends ConsumerWidget {
     DateTime completionDate,
   ) {
     final now = DateTime.now();
-    final monthsUntil = ((completionDate.year - now.year) * 12 +
+    final monthsUntil = (completionDate.year - now.year) * 12 +
         (completionDate.month - now.month) +
-        (completionDate.day >= now.day ? 0 : -1));
+        (completionDate.day >= now.day ? 0 : -1);
 
     return Card(
       color: cs.primaryContainer,

@@ -44,25 +44,21 @@ class SavingsGoalRepository {
   /// Update an existing goal
   Future<void> updateGoal(SavingsGoal goal) async {
     final model = SavingsGoalModel.fromEntity(goal);
-    try {
-      final index = _box.values.toList().indexWhere((m) => m.id == goal.id);
-      if (index != -1) {
-        await _box.putAt(index, model);
-      }
-    } catch (e) {
-      // Goal not found
+    final index = _box.values.toList().indexWhere((m) => m.id == goal.id);
+    if (index != -1) {
+      await _box.putAt(index, model);
+    } else {
+      throw Exception('Goal not found: ${goal.id}');
     }
   }
 
   /// Delete a goal
   Future<void> deleteGoal(String id) async {
-    try {
-      final index = _box.values.toList().indexWhere((m) => m.id == id);
-      if (index != -1) {
-        await _box.deleteAt(index);
-      }
-    } catch (e) {
-      // Goal not found
+    final index = _box.values.toList().indexWhere((m) => m.id == id);
+    if (index != -1) {
+      await _box.deleteAt(index);
+    } else {
+      throw Exception('Goal not found: $id');
     }
   }
 
