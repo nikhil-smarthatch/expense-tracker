@@ -14,10 +14,8 @@ class CreditCardListScreen extends ConsumerWidget {
     final totalBill = ref.watch(totalUnpaidCreditCardProvider);
     final cs = Theme.of(context).colorScheme;
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Credit Cards')),
-      body: Column(
-        children: [
+    return Column(
+      children: [
           // Total Card
           Container(
             width: double.infinity,
@@ -123,7 +121,6 @@ class CreditCardListScreen extends ConsumerWidget {
                   ),
           ),
         ],
-      ),
     );
   }
 }

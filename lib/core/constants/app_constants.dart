@@ -5,6 +5,7 @@ class AppConstants {
   static const String appName = 'Expense Tracker';
   static const String hiveExpenseBox = 'expenses';
   static const String hiveBudgetBox = 'budgets';
+  static const String hiveCategoryBudgetBox = 'category_budgets';
   static const String hiveLoansBox = 'loans';
   static const String hiveRepaymentsBox = 'repayments';
   static const String hiveSavingsGoalsBox = 'savings_goals';

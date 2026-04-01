@@ -31,7 +31,7 @@ class LoanCard extends StatelessWidget {
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: isSettled ? Colors.grey.withOpacity(0.2) : cs.primaryContainer,
+                  color: isSettled ? Colors.grey.withValues(alpha: 0.2) : cs.primaryContainer,
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
@@ -55,7 +55,7 @@ class LoanCard extends StatelessWidget {
                     Text(
                       AppDateUtils.formatShortDate(loan.date),
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: cs.onSurface.withOpacity(0.6),
+                        color: cs.onSurface.withValues(alpha: 0.6),
                       ),
                     ),
                   ],
@@ -77,7 +77,7 @@ class LoanCard extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
-                      color: isSettled ? Colors.grey.withOpacity(0.2) : cs.tertiaryContainer,
+                      color: isSettled ? Colors.grey.withValues(alpha: 0.2) : cs.tertiaryContainer,
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(

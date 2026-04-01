@@ -176,7 +176,7 @@ class BudgetGuidanceWidget extends ConsumerWidget {
             Text(
               completionDate.toString().split(' ')[0],
               style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: cs.primary.withOpacity(0.7),
+                    color: cs.primary.withValues(alpha: 0.7),
                   ),
             ),
           ],

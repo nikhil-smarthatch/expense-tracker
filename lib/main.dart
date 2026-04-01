@@ -5,13 +5,13 @@ import 'core/theme/app_theme.dart';
 import 'core/constants/app_constants.dart';
 import 'features/dashboard/presentation/screens/dashboard_screen.dart';
 import 'features/expense/data/models/expense_model.dart';
+import 'features/expense/data/models/category_budget_model.dart';
 import 'features/expense/presentation/screens/expense_list_screen.dart';
 import 'features/expense/presentation/screens/add_edit_expense_screen.dart';
-import 'features/loan/presentation/screens/loan_list_screen.dart';
 import 'features/loan/presentation/screens/add_edit_loan_screen.dart';
 import 'features/loan/data/models/loan_model.dart';
 import 'features/loan/data/models/repayment_model.dart';
-import 'features/credit_card/presentation/screens/credit_card_list_screen.dart';
+import 'features/accounts/presentation/screens/accounts_screen.dart';
 import 'features/income/presentation/screens/income_list_screen.dart';
 import 'features/income/data/models/savings_goal_model.dart';
 
@@ -21,11 +21,13 @@ Future<void> main() async {
   // Initialize Hive
   await Hive.initFlutter();
   Hive.registerAdapter(ExpenseModelAdapter());
+  Hive.registerAdapter(CategoryBudgetModelAdapter());
   Hive.registerAdapter(LoanModelAdapter());
   Hive.registerAdapter(RepaymentModelAdapter());
   Hive.registerAdapter(SavingsGoalModelAdapter());
   await Hive.openBox<ExpenseModel>(AppConstants.hiveExpenseBox);
   await Hive.openBox<double>(AppConstants.hiveBudgetBox);
+  await Hive.openBox<CategoryBudgetModel>(AppConstants.hiveCategoryBudgetBox);
   await Hive.openBox<LoanModel>(AppConstants.hiveLoansBox);
   await Hive.openBox<RepaymentModel>(AppConstants.hiveRepaymentsBox);
   await Hive.openBox<SavingsGoalModel>(AppConstants.hiveSavingsGoalsBox);
@@ -80,8 +82,7 @@ class _AppShellState extends State<AppShell> {
     DashboardScreen(),
     ExpenseListScreen(),
     IncomeListScreen(),
-    LoanListScreen(),
-    CreditCardListScreen(),
+    AccountsScreen(),
   ];
 
   @override
@@ -122,38 +123,55 @@ class _AppShellState extends State<AppShell> {
             label: 'Income',
           ),
           NavigationDestination(
-            icon: Icon(Icons.account_balance_wallet_outlined),
-            selectedIcon: Icon(Icons.account_balance_wallet_rounded),
-            label: 'Loans',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.credit_card_outlined),
-            selectedIcon: Icon(Icons.credit_card_rounded),
-            label: 'Cards',
+            icon: Icon(Icons.account_balance_outlined),
+            selectedIcon: Icon(Icons.account_balance_rounded),
+            label: 'Accounts',
           ),
         ],
       ),
-      floatingActionButton: _currentIndex == 0
-          ? null
-          : FloatingActionButton(
-              onPressed: () {
-                if (_currentIndex == 1 ||
-                    _currentIndex == 2 ||
-                    _currentIndex == 4) {
-                  Navigator.of(context).push(MaterialPageRoute(
-                      builder: (_) => const AddEditExpenseScreen()));
-                } else if (_currentIndex == 3) {
-                  Navigator.of(context).push(MaterialPageRoute(
-                      builder: (_) => const AddEditLoanScreen()));
-                }
-              },
-              tooltip: _currentIndex == 1
-                  ? 'Add Expense'
-                  : (_currentIndex == 2
-                      ? 'Add Income'
-                      : (_currentIndex == 3 ? 'Add Loan' : 'Add CC Spend')),
-              child: const Icon(Icons.add_rounded),
-            ),
+      floatingActionButton:
+          _currentIndex == 0 // Dashboard
+              ? null
+              : FloatingActionButton(
+                  onPressed: () {
+                    if (_currentIndex == 1 || _currentIndex == 2) { // Expenses, Income
+                      Navigator.of(context).push(MaterialPageRoute(
+                          builder: (_) => AddEditExpenseScreen(initialIsIncome: _currentIndex == 2)));
+                    } else if (_currentIndex == 3) { // Accounts
+                      showModalBottomSheet(
+                        context: context,
+                        builder: (_) => SafeArea(
+                          child: Wrap(
+                            children: [
+                              ListTile(
+                                leading: const Icon(Icons.account_balance_wallet_outlined),
+                                title: const Text('Add Loan'),
+                                onTap: () {
+                                  Navigator.pop(context);
+                                  Navigator.of(context).push(MaterialPageRoute(
+                                      builder: (_) => const AddEditLoanScreen()));
+                                },
+                              ),
+                              ListTile(
+                                leading: const Icon(Icons.credit_card_outlined),
+                                title: const Text('Add CC Spend'),
+                                onTap: () {
+                                  Navigator.pop(context);
+                                  Navigator.of(context).push(MaterialPageRoute(
+                                      builder: (_) => const AddEditExpenseScreen()));
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }
+                  },
+                  tooltip: _currentIndex == 1 || _currentIndex == 2
+                      ? 'Add Record'
+                      : 'Add Account Item',
+                  child: const Icon(Icons.add_rounded),
+                ),
     );
   }
 }

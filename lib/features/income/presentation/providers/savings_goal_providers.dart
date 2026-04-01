@@ -251,10 +251,9 @@ class SavingsGoalNotifier extends StateNotifier<AsyncValue<void>> {
       final repository = ref.read(savingsGoalRepositoryProvider);
       await repository.addGoal(goal);
 
-      // Refresh the provider
-      await ref.refresh(allSavingsGoalsProvider);
-      await ref.refresh(activeSavingsGoalsProvider);
-      await ref.refresh(primarySavingsGoalProvider);
+      ref.invalidate(allSavingsGoalsProvider);
+      ref.invalidate(activeSavingsGoalsProvider);
+      ref.invalidate(primarySavingsGoalProvider);
 
       state = const AsyncValue.data(null);
     } catch (e) {
@@ -268,9 +267,9 @@ class SavingsGoalNotifier extends StateNotifier<AsyncValue<void>> {
       final repository = ref.read(savingsGoalRepositoryProvider);
       await repository.updateGoal(goal);
 
-      await ref.refresh(allSavingsGoalsProvider);
-      await ref.refresh(activeSavingsGoalsProvider);
-      await ref.refresh(primarySavingsGoalProvider);
+      ref.invalidate(allSavingsGoalsProvider);
+      ref.invalidate(activeSavingsGoalsProvider);
+      ref.invalidate(primarySavingsGoalProvider);
 
       state = const AsyncValue.data(null);
     } catch (e) {
@@ -284,9 +283,9 @@ class SavingsGoalNotifier extends StateNotifier<AsyncValue<void>> {
       final repository = ref.read(savingsGoalRepositoryProvider);
       await repository.deleteGoal(id);
 
-      await ref.refresh(allSavingsGoalsProvider);
-      await ref.refresh(activeSavingsGoalsProvider);
-      await ref.refresh(primarySavingsGoalProvider);
+      ref.invalidate(allSavingsGoalsProvider);
+      ref.invalidate(activeSavingsGoalsProvider);
+      ref.invalidate(primarySavingsGoalProvider);
 
       state = const AsyncValue.data(null);
     } catch (e) {
@@ -300,9 +299,9 @@ class SavingsGoalNotifier extends StateNotifier<AsyncValue<void>> {
       final repository = ref.read(savingsGoalRepositoryProvider);
       await repository.completeGoal(id);
 
-      ref.refresh(allSavingsGoalsProvider);
-      ref.refresh(activeSavingsGoalsProvider);
-      ref.refresh(primarySavingsGoalProvider);
+      ref.invalidate(allSavingsGoalsProvider);
+      ref.invalidate(activeSavingsGoalsProvider);
+      ref.invalidate(primarySavingsGoalProvider);
 
       state = const AsyncValue.data(null);
     } catch (e) {
@@ -316,9 +315,9 @@ class SavingsGoalNotifier extends StateNotifier<AsyncValue<void>> {
       final repository = ref.read(savingsGoalRepositoryProvider);
       await repository.updateGoalAmount(id, amount);
 
-      ref.refresh(allSavingsGoalsProvider);
-      ref.refresh(activeSavingsGoalsProvider);
-      ref.refresh(primarySavingsGoalProvider);
+      ref.invalidate(allSavingsGoalsProvider);
+      ref.invalidate(activeSavingsGoalsProvider);
+      ref.invalidate(primarySavingsGoalProvider);
 
       state = const AsyncValue.data(null);
     } catch (e) {

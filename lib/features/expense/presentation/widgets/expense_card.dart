@@ -71,7 +71,7 @@ class ExpenseCard extends StatelessWidget {
                   width: 48,
                   height: 48,
                   decoration: BoxDecoration(
-                    color: category.color.withOpacity(0.15),
+                    color: category.color.withValues(alpha: 0.15),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(category.icon, color: category.color, size: 24),
@@ -95,7 +95,7 @@ class ExpenseCard extends StatelessWidget {
                           style: Theme.of(context)
                               .textTheme
                               .bodySmall
-                              ?.copyWith(color: cs.onSurface.withOpacity(0.6)),
+                              ?.copyWith(color: cs.onSurface.withValues(alpha: 0.6)),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -137,7 +137,7 @@ class ExpenseCard extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         if (expense.receiptPath != null) ...[
-                          Icon(Icons.receipt_rounded, size: 14, color: cs.onSurface.withOpacity(0.5)),
+                          Icon(Icons.receipt_rounded, size: 14, color: cs.onSurface.withValues(alpha: 0.5)),
                           const SizedBox(width: 4),
                         ],
                         Text(
@@ -145,7 +145,7 @@ class ExpenseCard extends StatelessWidget {
                           style: Theme.of(context)
                               .textTheme
                               .bodySmall
-                              ?.copyWith(color: cs.onSurface.withOpacity(0.5)),
+                              ?.copyWith(color: cs.onSurface.withValues(alpha: 0.5)),
                         ),
                       ],
                     ),

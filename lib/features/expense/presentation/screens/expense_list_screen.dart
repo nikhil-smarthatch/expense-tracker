@@ -7,6 +7,10 @@ import '../widgets/empty_state.dart';
 import '../widgets/monthly_filter.dart';
 import 'add_edit_expense_screen.dart';
 import '../../../../core/utils/currency_formatter.dart';
+import '../widgets/category_budget_dialog.dart';
+import 'reports_screen.dart';
+
+enum ExpenseMenuAction { reports, categoryBudgets, setBudget }
 
 class ExpenseListScreen extends ConsumerWidget {
   const ExpenseListScreen({super.key});
@@ -15,6 +19,7 @@ class ExpenseListScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final filteredAsync = ref.watch(filteredExpensesProvider);
     final monthlyTotal = ref.watch(monthlyExpenseProvider);
+    final budgetLimit = ref.watch(budgetLimitProvider);
     final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
@@ -28,6 +33,48 @@ class ExpenseListScreen extends ConsumerWidget {
               delegate: _ExpenseSearchDelegate(ref),
             ),
             tooltip: 'Search',
+          ),
+          PopupMenuButton<ExpenseMenuAction>(
+            onSelected: (action) {
+              if (action == ExpenseMenuAction.reports) {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const ReportsScreen()),
+                );
+              } else if (action == ExpenseMenuAction.categoryBudgets) {
+                showDialog(
+                  context: context,
+                  builder: (_) => const CategoryBudgetDialog(),
+                );
+              } else if (action == ExpenseMenuAction.setBudget) {
+                _showBudgetDialog(context, ref, budgetLimit);
+              }
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: ExpenseMenuAction.reports,
+                child: ListTile(
+                  leading: Icon(Icons.description_outlined),
+                  title: Text('Reports'),
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ),
+              const PopupMenuItem(
+                value: ExpenseMenuAction.categoryBudgets,
+                child: ListTile(
+                  leading: Icon(Icons.category_outlined),
+                  title: Text('Category Budgets'),
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ),
+              const PopupMenuItem(
+                value: ExpenseMenuAction.setBudget,
+                child: ListTile(
+                  leading: Icon(Icons.settings_outlined),
+                  title: Text('Set Monthly Budget'),
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -44,7 +91,7 @@ class ExpenseListScreen extends ConsumerWidget {
                 color: cs.surfaceContainerHighest,
                 border: Border(
                     bottom: BorderSide(
-                        color: cs.outline.withOpacity(0.15))),
+                        color: cs.outline.withValues(alpha: 0.15))),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -116,6 +163,40 @@ class ExpenseListScreen extends ConsumerWidget {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => const AddEditExpenseScreen(),
+      ),
+    );
+  }
+
+  void _showBudgetDialog(BuildContext context, WidgetRef ref, double current) {
+    final controller = TextEditingController(text: current.toStringAsFixed(0));
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Set Monthly Budget'),
+        content: TextField(
+          controller: controller,
+          keyboardType: TextInputType.number,
+          decoration: const InputDecoration(
+            labelText: 'Budget Amount (₹)',
+            prefixText: '₹ ',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () {
+              final value = double.tryParse(controller.text);
+              if (value != null && value > 0) {
+                ref.read(budgetLimitProvider.notifier).setBudget(value);
+              }
+              Navigator.of(context).pop();
+            },
+            child: const Text('Save'),
+          ),
+        ],
       ),
     );
   }

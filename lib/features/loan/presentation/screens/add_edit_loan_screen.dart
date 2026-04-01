@@ -83,7 +83,7 @@ class _AddEditLoanScreenState extends ConsumerState<AddEditLoanScreen> {
                 ),
               ),
               const SizedBox(height: 24),
-              _Label('Person Name'),
+              const _Label('Person Name'),
               const SizedBox(height: 8),
               TextFormField(
                 controller: _nameController,
@@ -91,7 +91,7 @@ class _AddEditLoanScreenState extends ConsumerState<AddEditLoanScreen> {
                 validator: (v) => v == null || v.trim().isEmpty ? 'Required' : null,
               ),
               const SizedBox(height: 24),
-              _Label('Amount (₹)'),
+              const _Label('Amount (₹)'),
               const SizedBox(height: 8),
               TextFormField(
                 controller: _amountController,
@@ -105,7 +105,7 @@ class _AddEditLoanScreenState extends ConsumerState<AddEditLoanScreen> {
                 },
               ),
               const SizedBox(height: 24),
-              _Label('Date'),
+              const _Label('Date'),
               const SizedBox(height: 8),
               InkWell(
                 onTap: _selectDate,
@@ -125,7 +125,7 @@ class _AddEditLoanScreenState extends ConsumerState<AddEditLoanScreen> {
                 ),
               ),
               const SizedBox(height: 24),
-              _Label('Note (optional)'),
+              const _Label('Note (optional)'),
               const SizedBox(height: 8),
               TextFormField(
                 controller: _noteController,

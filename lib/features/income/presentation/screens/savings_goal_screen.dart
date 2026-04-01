@@ -173,7 +173,7 @@ class SavingsGoalScreenPanel extends ConsumerWidget {
                                   ),
                                 );
                                 if (result == true) {
-                                  ref.refresh(allSavingsGoalsProvider);
+                                  ref.invalidate(allSavingsGoalsProvider);
                                 }
                               },
                             )),
@@ -206,7 +206,7 @@ class SavingsGoalScreenPanel extends ConsumerWidget {
                                     ),
                                   );
                                   if (result == true) {
-                                    ref.refresh(allSavingsGoalsProvider);
+                                    ref.invalidate(allSavingsGoalsProvider);
                                   }
                                 },
                               )),

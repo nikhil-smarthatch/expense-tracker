@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../expense/presentation/providers/expense_providers.dart';
+import '../../../expense/presentation/providers/reminder_providers.dart';
 import '../../../loan/presentation/providers/loan_providers.dart';
 import '../../../expense/presentation/widgets/expense_card.dart';
 import '../../../expense/presentation/widgets/empty_state.dart';
 import '../../../expense/presentation/widgets/monthly_filter.dart';
+import '../../../expense/presentation/screens/notifications_screen.dart';
+import '../../../expense/presentation/screens/analytics_screen.dart';
 import '../widgets/chart_widgets.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../../../core/constants/app_constants.dart';
@@ -15,23 +18,46 @@ class DashboardScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final categoryBreakdown = ref.watch(categoryBreakdownProvider);
     final dailyTrend = ref.watch(dailyTrendProvider);
     final recentExpenses = ref.watch(recentExpensesProvider);
     final highestCategory = ref.watch(highestCategoryProvider);
     final budgetLimit = ref.watch(budgetLimitProvider);
     final budgetUsage = ref.watch(budgetUsageProvider);
     final expensesAsync = ref.watch(expensesProvider);
-    final cs = Theme.of(context).colorScheme;
+    final reminderCount = ref.watch(totalReminderCountProvider);
 
     return Scaffold(
       appBar: AppBar(
         title: const Text(AppConstants.appName),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.settings_outlined),
-            onPressed: () => _showBudgetDialog(context, ref, budgetLimit),
-            tooltip: 'Set Budget',
+          Stack(
+            alignment: Alignment.topRight,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.notifications_outlined),
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                      builder: (_) => const NotificationsScreen()),
+                ),
+                tooltip: 'Notifications',
+              ),
+              if (reminderCount > 0)
+                Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: const BoxDecoration(
+                    color: Colors.red,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Text(
+                    reminderCount.toString(),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+            ],
           ),
         ],
       ),
@@ -47,14 +73,14 @@ class DashboardScreen extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Month Filter
-                Center(child: const MonthlyFilterWidget()),
+                const Center(child: MonthlyFilterWidget()),
                 const SizedBox(height: 16),
 
                 // Balance Card
                 _BalanceCard(
                   income: ref.watch(monthlyIncomeProvider),
                   expense: ref.watch(monthlyExpenseProvider),
-                  balance: ref.watch(netBalanceProvider),
+                  totalBalance: ref.watch(totalWalletBalanceProvider),
                   budgetLimit: budgetLimit,
                   budgetUsage: budgetUsage,
                 ),
@@ -69,28 +95,13 @@ class DashboardScreen extends ConsumerWidget {
 
                 // Highest Category Badge
                 if (highestCategory != null)
-                  _HighestCategoryCard(category: highestCategory!),
+                  _HighestCategoryCard(category: highestCategory),
                 const SizedBox(height: 16),
 
-                // Category Pie Chart
-                if (categoryBreakdown.isNotEmpty) ...[
-                  _SectionTitle(title: 'Category Breakdown'),
-                  const SizedBox(height: 8),
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: SizedBox(
-                        height: 200,
-                        child: CategoryPieChart(data: categoryBreakdown),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                ],
 
                 // Daily Spending Trend
                 if (dailyTrend.any((d) => d > 0)) ...[
-                  _SectionTitle(title: 'Daily Spending Trend'),
+                  const _SectionTitle(title: 'Daily Spending Trend'),
                   const SizedBox(height: 8),
                   Card(
                     child: Padding(
@@ -105,7 +116,7 @@ class DashboardScreen extends ConsumerWidget {
                 ],
 
                 // Recent Transactions
-                _SectionTitle(title: 'Recent Transactions'),
+                const _SectionTitle(title: 'Recent Transactions'),
                 const SizedBox(height: 8),
                 if (recentExpenses.isEmpty)
                   const EmptyStateWidget(
@@ -124,8 +135,8 @@ class DashboardScreen extends ConsumerWidget {
                         expense: expense,
                         onTap: () => Navigator.of(context).push(
                           MaterialPageRoute(
-                            builder: (_) => AddEditExpenseScreen(
-                                existingExpense: expense),
+                            builder: (_) =>
+                                AddEditExpenseScreen(existingExpense: expense),
                           ),
                         ),
                         onDelete: () => ref
@@ -141,41 +152,6 @@ class DashboardScreen extends ConsumerWidget {
       ),
     );
   }
-
-  void _showBudgetDialog(
-      BuildContext context, WidgetRef ref, double current) {
-    final controller = TextEditingController(text: current.toStringAsFixed(0));
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('Set Monthly Budget'),
-        content: TextField(
-          controller: controller,
-          keyboardType: TextInputType.number,
-          decoration: const InputDecoration(
-            labelText: 'Budget Amount (₹)',
-            prefixText: '₹ ',
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () {
-              final value = double.tryParse(controller.text);
-              if (value != null && value > 0) {
-                ref.read(budgetLimitProvider.notifier).setBudget(value);
-              }
-              Navigator.of(context).pop();
-            },
-            child: const Text('Save'),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 // ── Sub-widgets ──────────────────────────────
@@ -184,14 +160,14 @@ class _BalanceCard extends StatelessWidget {
   const _BalanceCard({
     required this.income,
     required this.expense,
-    required this.balance,
+    required this.totalBalance,
     required this.budgetLimit,
     required this.budgetUsage,
   });
 
   final double income;
   final double expense;
-  final double balance;
+  final double totalBalance;
   final double budgetLimit;
   final double budgetUsage;
 
@@ -202,27 +178,34 @@ class _BalanceCard extends StatelessWidget {
 
     return Card(
       color: cs.primaryContainer,
-      child: Padding(
-        padding: const EdgeInsets.all(20),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const AnalyticsScreen()),
+          );
+        },
+        child: Padding(
+          padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Net Balance',
+              'Total Wallet Balance',
               style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    color: cs.onPrimaryContainer.withOpacity(0.7),
+                    color: cs.onPrimaryContainer.withValues(alpha: 0.7),
                   ),
             ),
             const SizedBox(height: 4),
             Text(
-              CurrencyFormatter.format(balance),
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+              CurrencyFormatter.format(totalBalance),
+              style: Theme.of(context).textTheme.headlineLarge?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: cs.onPrimaryContainer,
                   ),
             ),
             const SizedBox(height: 16),
-            
+
             // Income / Expense Row
             Row(
               children: [
@@ -232,18 +215,32 @@ class _BalanceCard extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.all(6),
                         decoration: BoxDecoration(
-                          color: Colors.green.withOpacity(0.2),
+                          color: Colors.green.withValues(alpha: 0.2),
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(Icons.arrow_downward_rounded, size: 16, color: Colors.green),
+                        child: const Icon(Icons.arrow_downward_rounded,
+                            size: 16, color: Colors.green),
                       ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('Income', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: cs.onPrimaryContainer.withOpacity(0.7))),
-                            Text(CurrencyFormatter.format(income), style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold, color: cs.onPrimaryContainer), overflow: TextOverflow.ellipsis),
+                            Text('Income',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodySmall
+                                    ?.copyWith(
+                                        color: cs.onPrimaryContainer
+                                            .withValues(alpha: 0.7))),
+                            Text(CurrencyFormatter.format(income),
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyMedium
+                                    ?.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                        color: cs.onPrimaryContainer),
+                                overflow: TextOverflow.ellipsis),
                           ],
                         ),
                       ),
@@ -256,18 +253,32 @@ class _BalanceCard extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.all(6),
                         decoration: BoxDecoration(
-                          color: Colors.red.withOpacity(0.2),
+                          color: Colors.red.withValues(alpha: 0.2),
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(Icons.arrow_upward_rounded, size: 16, color: Colors.red),
+                        child: const Icon(Icons.arrow_upward_rounded,
+                            size: 16, color: Colors.red),
                       ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('Expense', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: cs.onPrimaryContainer.withOpacity(0.7))),
-                            Text(CurrencyFormatter.format(expense), style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold, color: cs.onPrimaryContainer), overflow: TextOverflow.ellipsis),
+                            Text('Expense',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodySmall
+                                    ?.copyWith(
+                                        color: cs.onPrimaryContainer
+                                            .withValues(alpha: 0.7))),
+                            Text(CurrencyFormatter.format(expense),
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyMedium
+                                    ?.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                        color: cs.onPrimaryContainer),
+                                overflow: TextOverflow.ellipsis),
                           ],
                         ),
                       ),
@@ -283,7 +294,7 @@ class _BalanceCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(8),
               child: LinearProgressIndicator(
                 value: budgetUsage.clamp(0.0, 1.0),
-                backgroundColor: cs.onPrimaryContainer.withOpacity(0.15),
+                backgroundColor: cs.onPrimaryContainer.withValues(alpha: 0.15),
                 color: isOverBudget ? cs.error : cs.primary,
                 minHeight: 6,
               ),
@@ -299,19 +310,20 @@ class _BalanceCard extends StatelessWidget {
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: isOverBudget
                             ? cs.error
-                            : cs.onPrimaryContainer.withOpacity(0.7),
+                            : cs.onPrimaryContainer.withValues(alpha: 0.7),
                         fontWeight: FontWeight.w500,
                       ),
                 ),
                 Text(
                   'Budget: ${CurrencyFormatter.formatCompact(budgetLimit)}',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: cs.onPrimaryContainer.withOpacity(0.7),
+                        color: cs.onPrimaryContainer.withValues(alpha: 0.7),
                       ),
                 ),
               ],
             ),
           ],
+        ),
         ),
       ),
     );
@@ -325,13 +337,12 @@ class _HighestCategoryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
-        color: category.color.withOpacity(0.12),
+        color: category.color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: category.color.withOpacity(0.3)),
+        border: Border.all(color: category.color.withValues(alpha: 0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -368,7 +379,8 @@ class _SectionTitle extends StatelessWidget {
 }
 
 class _LoansSummaryCard extends StatelessWidget {
-  const _LoansSummaryCard({required this.totalBorrowed, required this.totalLent});
+  const _LoansSummaryCard(
+      {required this.totalBorrowed, required this.totalLent});
   final double totalBorrowed;
   final double totalLent;
 
@@ -388,13 +400,21 @@ class _LoansSummaryCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Total Borrowed', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: cs.error, fontWeight: FontWeight.bold)),
+                    Text('Total Borrowed',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: cs.error, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 4),
-                    Text(CurrencyFormatter.format(totalBorrowed), style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: cs.error)),
+                    Text(CurrencyFormatter.format(totalBorrowed),
+                        style: Theme.of(context)
+                            .textTheme
+                            .titleMedium
+                            ?.copyWith(
+                                fontWeight: FontWeight.bold, color: cs.error)),
                   ],
                 ),
               ),
@@ -411,13 +431,22 @@ class _LoansSummaryCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Total Lent', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.green, fontWeight: FontWeight.bold)),
+                    Text('Total Lent',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Colors.green, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 4),
-                    Text(CurrencyFormatter.format(totalLent), style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: Colors.green)),
+                    Text(CurrencyFormatter.format(totalLent),
+                        style: Theme.of(context)
+                            .textTheme
+                            .titleMedium
+                            ?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.green)),
                   ],
                 ),
               ),
@@ -427,4 +456,3 @@ class _LoansSummaryCard extends StatelessWidget {
     );
   }
 }
-

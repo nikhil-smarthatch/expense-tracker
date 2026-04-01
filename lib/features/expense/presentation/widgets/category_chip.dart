@@ -24,7 +24,7 @@ class CategoryChip extends StatelessWidget {
         decoration: BoxDecoration(
           color: isSelected
               ? category.color
-              : category.color.withOpacity(0.1),
+              : category.color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(30),
           border: Border.all(
             color: category.color,

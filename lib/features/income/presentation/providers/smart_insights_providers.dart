@@ -1,6 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/usecases/spending_analyzer.dart';
-import '../../domain/entities/savings_goal.dart';
 import '../../../expense/presentation/providers/expense_providers.dart';
 import 'savings_goal_providers.dart';
 

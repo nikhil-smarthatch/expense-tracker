@@ -10,10 +10,17 @@ import '../widgets/category_chip.dart';
 import '../widgets/image_preview_widget.dart';
 
 class AddEditExpenseScreen extends ConsumerStatefulWidget {
-  const AddEditExpenseScreen({super.key, this.existingExpense});
+  const AddEditExpenseScreen({
+    super.key,
+    this.existingExpense,
+    this.initialIsIncome = false,
+  });
 
   /// If editing, pass the existing expense; null means adding new.
   final Expense? existingExpense;
+
+  /// Pre-selects the Income toggle when opening for a new entry.
+  final bool initialIsIncome;
 
   @override
   ConsumerState<AddEditExpenseScreen> createState() =>
@@ -45,7 +52,7 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
 
     _selectedCategory = e?.category ?? ExpenseCategory.food;
     _selectedDate = e?.date ?? DateTime.now();
-    _isIncome = e?.isIncome ?? false;
+    _isIncome = e?.isIncome ?? widget.initialIsIncome;
     _receiptPath = e?.receiptPath;
     _isCreditCard = e?.isCreditCard ?? false;
     _isRecurring = e?.isRecurring ?? false;
@@ -75,6 +82,7 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
   }
 
   Future<void> _pickReceipt() async {
+    final messenger = ScaffoldMessenger.of(context);
     try {
       final XFile? image = await _picker.pickImage(
         source: ImageSource.gallery,
@@ -92,7 +100,7 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
       });
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        messenger.showSnackBar(
           SnackBar(content: Text('Error attaching receipt: $e')),
         );
       }
@@ -171,11 +179,11 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
                     ],
                   ),
                 );
-                if (confirmed == true && mounted) {
+                if (confirmed == true && context.mounted) {
                   await ref
                       .read(expensesProvider.notifier)
                       .deleteExpense(widget.existingExpense!.id);
-                  if (mounted) Navigator.of(context).pop();
+                  if (context.mounted) Navigator.of(context).pop();
                 }
               },
             ),
@@ -217,44 +225,46 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
                   subtitle:
                       const Text('Delays budget impact until the bill is paid'),
                   value: _isCreditCard,
-                  activeColor: cs.primary,
+                  activeThumbColor: cs.primary,
                   onChanged: (val) => setState(() => _isCreditCard = val),
                   contentPadding: const EdgeInsets.symmetric(horizontal: 8),
                 ),
-                SwitchListTile(
-                  title: const Text('Recurring Subscription?'),
-                  subtitle: const Text('Auto-logs this expense periodically'),
-                  value: _isRecurring,
-                  activeColor: cs.primary,
-                  onChanged: (val) => setState(() => _isRecurring = val),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 8),
-                ),
-                if (_isRecurring)
-                  Padding(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                    child: DropdownButtonFormField<String>(
-                      value: _recurrenceInterval,
-                      decoration:
-                          const InputDecoration(labelText: 'Repeats Every'),
-                      items: const [
-                        DropdownMenuItem(value: 'daily', child: Text('Day')),
-                        DropdownMenuItem(value: 'weekly', child: Text('Week')),
-                        DropdownMenuItem(
-                            value: 'monthly', child: Text('Month')),
-                        DropdownMenuItem(value: 'yearly', child: Text('Year')),
-                      ],
-                      onChanged: (val) {
-                        if (val != null)
-                          setState(() => _recurrenceInterval = val);
-                      },
-                    ),
-                  ),
-                const SizedBox(height: 16),
               ],
+              SwitchListTile(
+                title: const Text('Recurring?'),
+                subtitle: Text(_isIncome
+                    ? 'Auto-logs this income periodically'
+                    : 'Auto-logs this expense periodically'),
+                value: _isRecurring,
+                activeThumbColor: cs.primary,
+                onChanged: (val) => setState(() => _isRecurring = val),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+              ),
+              if (_isRecurring)
+                Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                  child: DropdownButtonFormField<String>(
+                    initialValue: _recurrenceInterval,
+                    decoration:
+                        const InputDecoration(labelText: 'Repeats Every'),
+                    items: const [
+                      DropdownMenuItem(value: 'daily', child: Text('Day')),
+                      DropdownMenuItem(value: 'weekly', child: Text('Week')),
+                      DropdownMenuItem(value: 'monthly', child: Text('Month')),
+                      DropdownMenuItem(value: 'yearly', child: Text('Year')),
+                    ],
+                    onChanged: (val) {
+                      if (val != null) {
+                        setState(() => _recurrenceInterval = val);
+                      }
+                    },
+                  ),
+                ),
+              const SizedBox(height: 16),
 
               // Amount Field
-              _Label('Amount (₹)'),
+              const _Label('Amount (₹)'),
               const SizedBox(height: 8),
               TextFormField(
                 controller: _amountController,
@@ -278,7 +288,7 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
               const SizedBox(height: 24),
 
               // Category Selection
-              _Label('Category'),
+              const _Label('Category'),
               const SizedBox(height: 10),
               Wrap(
                 spacing: 8,
@@ -295,7 +305,7 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
               const SizedBox(height: 24),
 
               // Date Picker
-              _Label('Date'),
+              const _Label('Date'),
               const SizedBox(height: 8),
               InkWell(
                 onTap: _selectDate,
@@ -318,7 +328,7 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
                       ),
                       const Spacer(),
                       Icon(Icons.arrow_drop_down_rounded,
-                          color: cs.onSurface.withOpacity(0.5)),
+                          color: cs.onSurface.withValues(alpha: 0.5)),
                     ],
                   ),
                 ),
@@ -326,7 +336,7 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
               const SizedBox(height: 24),
 
               // Note Field
-              _Label('Note (optional)'),
+              const _Label('Note (optional)'),
               const SizedBox(height: 8),
               TextFormField(
                 controller: _noteController,
@@ -340,13 +350,12 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
               const SizedBox(height: 24),
 
               // Receipt Attachment
-              _Label('Receipt Attachment'),
+              const _Label('Receipt Attachment'),
               const SizedBox(height: 8),
               if (_receiptPath != null)
-                ImageThumbnailCard(
+                ReceiptAttachmentRow(
                   imagePath: _receiptPath!,
                   onRemove: () => setState(() => _receiptPath = null),
-                  onPreview: () => showImagePreview(context, _receiptPath!),
                 )
               else
                 ReceiptUploadButton(onPressed: _pickReceipt),

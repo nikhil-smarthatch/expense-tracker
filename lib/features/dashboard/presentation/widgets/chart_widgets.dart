@@ -183,7 +183,7 @@ class DailyBarChart extends StatelessWidget {
           show: true,
           drawVerticalLine: false,
           getDrawingHorizontalLine: (value) => FlLine(
-            color: cs.outline.withOpacity(0.2),
+            color: cs.outline.withValues(alpha: 0.2),
             strokeWidth: 1,
           ),
         ),
@@ -195,7 +195,7 @@ class DailyBarChart extends StatelessWidget {
                 toY: dailyTotals[i],
                 color: dailyTotals[i] > 0
                     ? cs.primary
-                    : cs.outline.withOpacity(0.2),
+                    : cs.outline.withValues(alpha: 0.2),
                 width: 8,
                 borderRadius: const BorderRadius.vertical(
                     top: Radius.circular(4)),

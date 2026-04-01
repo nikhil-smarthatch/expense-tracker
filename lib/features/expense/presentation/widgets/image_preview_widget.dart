@@ -28,15 +28,6 @@ class ImagePreviewDialog extends StatelessWidget {
             onPressed: () => Navigator.pop(context),
           ),
           title: const Text('Receipt Preview'),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.zoom_in),
-              tooltip: 'Zoom in',
-              onPressed: () {
-                // Pinch to zoom is handled by InteractiveViewer
-              },
-            ),
-          ],
         ),
         body: Center(
           child: InteractiveViewer(
@@ -54,7 +45,112 @@ class ImagePreviewDialog extends StatelessWidget {
   }
 }
 
-/// Thumbnail card with preview capability
+/// Compact receipt attachment row — shows a pill with receipt icon + filename.
+/// Opens full-screen preview on tap. Does NOT show the image inline.
+class ReceiptAttachmentRow extends StatelessWidget {
+  const ReceiptAttachmentRow({
+    super.key,
+    required this.imagePath,
+    this.onRemove,
+  });
+
+  final String imagePath;
+  final VoidCallback? onRemove;
+
+  String get _fileName => imagePath.split('/').last;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: cs.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: cs.outline.withValues(alpha: 0.3)),
+      ),
+      child: InkWell(
+        onTap: () => showImagePreview(context, imagePath),
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: cs.primaryContainer,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  Icons.receipt_long_rounded,
+                  color: cs.primary,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Receipt Attached',
+                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: cs.onSurface,
+                          ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      _fileName,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: cs.onSurfaceVariant,
+                          ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              // Tap hint
+              Padding(
+                padding: const EdgeInsets.only(right: 4),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.visibility_outlined, size: 16, color: cs.primary),
+                    const SizedBox(width: 4),
+                    Text(
+                      'View',
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                            color: cs.primary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                    ),
+                  ],
+                ),
+              ),
+              if (onRemove != null) ...[
+                const SizedBox(width: 4),
+                IconButton(
+                  icon: Icon(Icons.close_rounded, size: 18, color: cs.error),
+                  onPressed: onRemove,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                  tooltip: 'Remove receipt',
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Thumbnail card with preview capability (used in gallery / detail views)
 class ImageThumbnailCard extends StatelessWidget {
   const ImageThumbnailCard({
     super.key,
@@ -95,9 +191,27 @@ class ImageThumbnailCard extends StatelessWidget {
             ),
           ),
         ),
+        // Zoom-in overlay — Positioned must be a direct Stack child
+        Positioned(
+          bottom: 8,
+          left: 8,
+          child: Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: Colors.black.withValues(alpha: 0.5),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Icon(
+              Icons.zoom_in,
+              color: Colors.white,
+              size: 18,
+            ),
+          ),
+        ),
         if (onRemove != null)
-          Padding(
-            padding: const EdgeInsets.all(4),
+          Positioned(
+            top: 4,
+            right: 4,
             child: IconButton(
               icon: const Icon(Icons.remove_circle),
               color: cs.error,
@@ -108,26 +222,6 @@ class ImageThumbnailCard extends StatelessWidget {
               ),
             ),
           ),
-        // Preview icon overlay
-        Padding(
-          padding: const EdgeInsets.all(8),
-          child: Positioned(
-            bottom: 8,
-            right: 8,
-            child: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.5),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Icon(
-                Icons.zoom_in,
-                color: Colors.white,
-                size: 20,
-              ),
-            ),
-          ),
-        ),
       ],
     );
   }

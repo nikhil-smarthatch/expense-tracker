@@ -26,7 +26,6 @@ class AppTheme {
           error: _errorColor,
           brightness: Brightness.light,
         ),
-        fontFamily: 'Roboto',
         appBarTheme: const AppBarTheme(
           centerTitle: true,
           elevation: 0,
@@ -50,11 +49,11 @@ class AppTheme {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: _primaryColor, width: 2),
+            borderSide: const BorderSide(color: _primaryColor, width: 2),
           ),
           errorBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: _errorColor, width: 2),
+            borderSide: const BorderSide(color: _errorColor, width: 2),
           ),
           contentPadding:
               const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -64,8 +63,7 @@ class AppTheme {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
             ),
-            padding:
-                const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
           ),
         ),
         floatingActionButtonTheme: const FloatingActionButtonThemeData(
@@ -87,7 +85,6 @@ class AppTheme {
           error: _errorColor,
           brightness: Brightness.dark,
         ),
-        fontFamily: 'Roboto',
         appBarTheme: const AppBarTheme(
           centerTitle: true,
           elevation: 0,
@@ -111,11 +108,11 @@ class AppTheme {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: _primaryColor, width: 2),
+            borderSide: const BorderSide(color: _primaryColor, width: 2),
           ),
           errorBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: _errorColor, width: 2),
+            borderSide: const BorderSide(color: _errorColor, width: 2),
           ),
           contentPadding:
               const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -125,8 +122,7 @@ class AppTheme {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
             ),
-            padding:
-                const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
           ),
         ),
         floatingActionButtonTheme: const FloatingActionButtonThemeData(

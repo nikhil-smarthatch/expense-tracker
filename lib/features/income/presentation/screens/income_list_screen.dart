@@ -7,7 +7,6 @@ import '../../../expense/presentation/widgets/image_preview_widget.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../providers/income_providers.dart';
 import '../providers/savings_goal_providers.dart';
-import '../widgets/goal_progress_card.dart';
 import 'savings_goal_screen.dart';
 import 'add_edit_goal_screen.dart';
 import 'smart_insights_screen.dart';
@@ -50,7 +49,7 @@ class IncomeListScreen extends ConsumerWidget {
       floatingActionButton: FloatingActionButton(
         onPressed: () => Navigator.of(context).push(
           MaterialPageRoute(
-            builder: (_) => const AddEditExpenseScreen(),
+            builder: (_) => const AddEditExpenseScreen(initialIsIncome: true),
           ),
         ),
         tooltip: 'Add Income',
@@ -93,7 +92,8 @@ class IncomeListScreen extends ConsumerWidget {
                                   gradient: LinearGradient(
                                     colors: [
                                       cs.primaryContainer,
-                                      cs.primaryContainer.withOpacity(0.7),
+                                      cs.primaryContainer
+                                          .withValues(alpha: 0.7),
                                     ],
                                   ),
                                   borderRadius: BorderRadius.circular(12),
@@ -128,8 +128,8 @@ class IncomeListScreen extends ConsumerWidget {
                                                       100)
                                                   .clamp(0.0, 1.0),
                                               minHeight: 4,
-                                              backgroundColor:
-                                                  cs.primary.withOpacity(0.2),
+                                              backgroundColor: cs.primary
+                                                  .withValues(alpha: 0.2),
                                               valueColor:
                                                   AlwaysStoppedAnimation<Color>(
                                                 cs.primary,

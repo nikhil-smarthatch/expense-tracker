@@ -38,9 +38,9 @@ class SmartInsightsScreen extends ConsumerWidget {
             data: (suggestions) {
               return RefreshIndicator(
                 onRefresh: () async {
-                  await ref.refresh(spendingByCategoryProvider.future);
-                  await ref.refresh(primaryGoalSuggestionsProvider.future);
-                  await ref.refresh(completionDateProvider.future);
+                  ref.invalidate(spendingByCategoryProvider);
+                  ref.invalidate(primaryGoalSuggestionsProvider);
+                  ref.invalidate(completionDateProvider);
                 },
                 child: SingleChildScrollView(
                   physics: const AlwaysScrollableScrollPhysics(),
@@ -88,7 +88,7 @@ class SmartInsightsScreen extends ConsumerWidget {
         gradient: LinearGradient(
           colors: [
             cs.primaryContainer,
-            cs.primaryContainer.withOpacity(0.7),
+            cs.primaryContainer.withValues(alpha: 0.7),
           ],
         ),
         borderRadius: BorderRadius.circular(12),

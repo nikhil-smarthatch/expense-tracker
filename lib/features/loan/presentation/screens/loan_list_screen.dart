@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/loan_type.dart';
 import '../providers/loan_providers.dart';
 import '../widgets/loan_card.dart';
-import 'add_edit_loan_screen.dart';
 
 class LoanListScreen extends ConsumerStatefulWidget {
   const LoanListScreen({super.key});
@@ -20,10 +19,8 @@ class _LoanListScreenState extends ConsumerState<LoanListScreen> {
     final loansAsync = ref.watch(loansProvider);
     final cs = Theme.of(context).colorScheme;
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Loans')),
-      body: Column(
-        children: [
+    return Column(
+      children: [
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: SizedBox(
@@ -66,7 +63,7 @@ class _LoanListScreenState extends ConsumerState<LoanListScreen> {
                                 child: Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    Icon(Icons.account_balance_wallet_outlined, size: 64, color: cs.primary.withOpacity(0.5)),
+                                    Icon(Icons.account_balance_wallet_outlined, size: 64, color: cs.primary.withValues(alpha: 0.5)),
                                     const SizedBox(height: 16),
                                     Text('No ${_selectedType.label.toLowerCase()} records found.', style: Theme.of(context).textTheme.titleMedium),
                                   ],
@@ -88,7 +85,6 @@ class _LoanListScreenState extends ConsumerState<LoanListScreen> {
             ),
           ),
         ],
-      ),
     );
   }
 }

@@ -78,9 +78,9 @@ class _LoanDetailScreenState extends ConsumerState<LoanDetailScreen> {
                   ],
                 ),
               );
-              if (confirm == true) {
+              if (confirm == true && context.mounted) {
                 ref.read(loansProvider.notifier).deleteLoan(_currentLoan.id);
-                if (mounted) Navigator.of(context).pop();
+                Navigator.of(context).pop();
               }
             },
           ),
@@ -108,7 +108,7 @@ class _LoanDetailScreenState extends ConsumerState<LoanDetailScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
                           _MetricInfo('Total', _currentLoan.totalAmount),
-                          Container(width: 1, height: 40, color: cs.onSurface.withOpacity(0.2)),
+                          Container(width: 1, height: 40, color: cs.onSurface.withValues(alpha: 0.2)),
                           _MetricInfo('Remaining', _currentLoan.remainingAmount, color: _currentLoan.isSettled ? null : (_currentLoan.remainingAmount > 0 ? cs.primary : Colors.green)),
                         ],
                       ),
@@ -138,7 +138,7 @@ class _LoanDetailScreenState extends ConsumerState<LoanDetailScreen> {
                   (context, index) {
                     final r = repayments[index];
                     return ListTile(
-                      leading: CircleAvatar(backgroundColor: Colors.green.withOpacity(0.2), child: const Icon(Icons.payment_rounded, color: Colors.green)),
+                      leading: CircleAvatar(backgroundColor: Colors.green.withValues(alpha: 0.2), child: const Icon(Icons.payment_rounded, color: Colors.green)),
                       title: Text(CurrencyFormatter.format(r.amount), style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
                       subtitle: Text(AppDateUtils.formatShortDate(r.date)),
                     );

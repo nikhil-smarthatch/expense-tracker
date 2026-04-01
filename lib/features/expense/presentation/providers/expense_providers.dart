@@ -9,6 +9,7 @@ import '../../domain/entities/expense.dart';
 import '../../domain/entities/expense_category.dart';
 import '../../domain/repositories/expense_repository.dart';
 import '../../../loan/presentation/providers/loan_providers.dart';
+import 'category_budget_providers.dart';
 
 // ─────────────────────────────────────────────
 // Infrastructure Providers
@@ -47,8 +48,7 @@ class SelectedMonthNotifier extends Notifier<DateTime> {
   void setMonth(DateTime date) => state = date;
 }
 
-final selectedMonthProvider =
-    NotifierProvider<SelectedMonthNotifier, DateTime>(
+final selectedMonthProvider = NotifierProvider<SelectedMonthNotifier, DateTime>(
   SelectedMonthNotifier.new,
 );
 
@@ -81,14 +81,15 @@ class ExpenseNotifier extends AsyncNotifier<List<Expense>> {
           nextDate = DateTime(e.date.year + 1, e.date.month, e.date.day);
         }
 
-        if (nextDate != null && (now.isAfter(nextDate) || AppDateUtils.isSameDay(now, nextDate))) {
+        if (nextDate != null &&
+            (now.isAfter(nextDate) || AppDateUtils.isSameDay(now, nextDate))) {
           final clone = e.copyWith(
             id: const Uuid().v4(),
             date: nextDate,
             isRecurring: true,
           );
           final updatedOld = e.copyWith(isRecurring: false);
-          
+
           await ref.read(expenseRepositoryProvider).updateExpense(updatedOld);
           await ref.read(expenseRepositoryProvider).addExpense(clone);
           hasUpdates = true;
@@ -99,8 +100,8 @@ class ExpenseNotifier extends AsyncNotifier<List<Expense>> {
   }
 
   /// Refreshes the expense list from Hive.
-  Future<void> refresh() => update((_) =>
-      ref.read(expenseRepositoryProvider).getAllExpenses());
+  Future<void> refresh() =>
+      update((_) => ref.read(expenseRepositoryProvider).getAllExpenses());
 
   Future<void> addExpense({
     required double amount,
@@ -140,8 +141,10 @@ class ExpenseNotifier extends AsyncNotifier<List<Expense>> {
   }
 
   /// Settles credit card spends using FIFO logic
-  Future<void> settleCreditCardBill(List<Expense> spends, DateTime date, {double? paymentAmount}) async {
-    final sortedSpends = List<Expense>.from(spends)..sort((a, b) => a.date.compareTo(b.date));
+  Future<void> settleCreditCardBill(List<Expense> spends, DateTime date,
+      {double? paymentAmount}) async {
+    final sortedSpends = List<Expense>.from(spends)
+      ..sort((a, b) => a.date.compareTo(b.date));
     double amountLeftToApply = paymentAmount ?? double.infinity;
     double totalPaidThisSession = 0.0;
 
@@ -165,7 +168,7 @@ class ExpenseNotifier extends AsyncNotifier<List<Expense>> {
         }
 
         totalPaidThisSession += appliedToItem;
-        
+
         final updated = e.copyWith(
           creditCardPaidAmount: e.creditCardPaidAmount + appliedToItem,
           isCreditCardSettled: becomesSettled,
@@ -190,8 +193,7 @@ class ExpenseNotifier extends AsyncNotifier<List<Expense>> {
   }
 }
 
-final expensesProvider =
-    AsyncNotifierProvider<ExpenseNotifier, List<Expense>>(
+final expensesProvider = AsyncNotifierProvider<ExpenseNotifier, List<Expense>>(
   ExpenseNotifier.new,
 );
 
@@ -215,8 +217,9 @@ final filteredExpensesProvider = Provider<AsyncValue<List<Expense>>>((ref) {
 final monthlyIncomeProvider = Provider<double>((ref) {
   final filtered = ref.watch(filteredExpensesProvider);
   return filtered.maybeWhen(
-    data: (transactions) =>
-        transactions.where((e) => e.isIncome).fold(0.0, (sum, e) => sum + e.amount),
+    data: (transactions) => transactions
+        .where((e) => e.isIncome)
+        .fold(0.0, (sum, e) => sum + e.amount),
     orElse: () => 0.0,
   );
 });
@@ -225,24 +228,39 @@ final monthlyIncomeProvider = Provider<double>((ref) {
 final monthlyExpenseProvider = Provider<double>((ref) {
   final filtered = ref.watch(filteredExpensesProvider);
   return filtered.maybeWhen(
-    data: (transactions) =>
-        transactions.where((e) => !e.isIncome).fold(0.0, (sum, e) => sum + e.amount),
+    data: (transactions) => transactions
+        .where((e) => !e.isIncome)
+        .fold(0.0, (sum, e) => sum + e.amount),
     orElse: () => 0.0,
   );
 });
 
-/// Net balance (Income + Borrowed - Expense - Lent).
-final netBalanceProvider = Provider<double>((ref) {
-  final income = ref.watch(monthlyIncomeProvider);
-  final expense = ref.watch(monthlyExpenseProvider);
+
+/// Total wallet balance (All-time Income + Borrowed - All-time Expense - Lent).
+final totalWalletBalanceProvider = Provider<double>((ref) {
+  final expensesAsync = ref.watch(expensesProvider);
   final borrowed = ref.watch(totalBorrowedProvider);
   final lent = ref.watch(totalLentProvider);
-  return income + borrowed - expense - lent;
+
+  return expensesAsync.maybeWhen(
+    data: (transactions) {
+      double income = 0;
+      double expense = 0;
+      for (final e in transactions) {
+        if (e.isIncome) {
+          income += e.amount;
+        } else if (!e.isCreditCard) {
+          expense += e.amount;
+        }
+      }
+      return income + borrowed - expense - lent;
+    },
+    orElse: () => 0.0,
+  );
 });
 
 /// Category-wise totals map for the selected month (Expenses only).
-final categoryBreakdownProvider =
-    Provider<Map<ExpenseCategory, double>>((ref) {
+final categoryBreakdownProvider = Provider<Map<ExpenseCategory, double>>((ref) {
   final filtered = ref.watch(filteredExpensesProvider);
   return filtered.maybeWhen(
     data: (transactions) {
@@ -260,9 +278,7 @@ final categoryBreakdownProvider =
 final highestCategoryProvider = Provider<ExpenseCategory?>((ref) {
   final breakdown = ref.watch(categoryBreakdownProvider);
   if (breakdown.isEmpty) return null;
-  return breakdown.entries
-      .reduce((a, b) => a.value >= b.value ? a : b)
-      .key;
+  return breakdown.entries.reduce((a, b) => a.value >= b.value ? a : b).key;
 });
 
 /// Daily spending totals for the selected month (used in bar chart).
@@ -302,8 +318,9 @@ final recentExpensesProvider = Provider<List<Expense>>((ref) {
 final unpaidCreditCardSpendsProvider = Provider<List<Expense>>((ref) {
   final expensesAsync = ref.watch(expensesProvider);
   return expensesAsync.maybeWhen(
-    data: (expenses) =>
-        expenses.where((e) => e.isCreditCard && !e.isCreditCardSettled).toList(),
+    data: (expenses) => expenses
+        .where((e) => e.isCreditCard && !e.isCreditCardSettled)
+        .toList(),
     orElse: () => [],
   );
 });
@@ -311,7 +328,8 @@ final unpaidCreditCardSpendsProvider = Provider<List<Expense>>((ref) {
 /// Total outstanding credit card bill
 final totalUnpaidCreditCardProvider = Provider<double>((ref) {
   final unpaid = ref.watch(unpaidCreditCardSpendsProvider);
-  return unpaid.fold(0.0, (sum, e) => sum + (e.amount - e.creditCardPaidAmount));
+  return unpaid.fold(
+      0.0, (sum, e) => sum + (e.amount - e.creditCardPaidAmount));
 });
 
 // ─────────────────────────────────────────────
@@ -359,7 +377,8 @@ class BudgetNotifier extends Notifier<double> {
   }
 }
 
-final budgetLimitProvider = NotifierProvider<BudgetNotifier, double>(BudgetNotifier.new);
+final budgetLimitProvider =
+    NotifierProvider<BudgetNotifier, double>(BudgetNotifier.new);
 
 /// Percentage of budget used this month (0.0 – 1.0+)
 final budgetUsageProvider = Provider<double>((ref) {
@@ -367,4 +386,46 @@ final budgetUsageProvider = Provider<double>((ref) {
   final budget = ref.watch(budgetLimitProvider);
   if (budget <= 0) return 0;
   return expense / budget;
+});
+
+// ─────────────────────────────────────────────
+// Category Budget Usage
+// ─────────────────────────────────────────────
+
+/// Calculates budget usage percentage for each category
+/// Returns map like: {food: 0.65, travel: 0.92, bills: 1.15}
+final categoryBudgetUsageProvider =
+    Provider<Map<ExpenseCategory, double>>((ref) {
+  final categorySpending = ref.watch(categoryBreakdownProvider);
+  final budgets = ref.watch(
+    categoryBudgetVisibleProvider,
+  );
+
+  final usage = <ExpenseCategory, double>{};
+
+  for (final category in ExpenseCategory.values) {
+    final spent = categorySpending[category] ?? 0.0;
+    final budget = budgets[category];
+
+    if (budget != null && budget > 0) {
+      usage[category] = spent / budget;
+    }
+  }
+
+  return usage;
+});
+
+/// Returns list of categories where budget is exceeded (>= 100%)
+final overBudgetCategoriesProvider = Provider<List<ExpenseCategory>>((ref) {
+  final usage = ref.watch(categoryBudgetUsageProvider);
+  return usage.entries.where((e) => e.value >= 1.0).map((e) => e.key).toList();
+});
+
+/// Returns list of categories near budget limit (>= 80% and < 100%)
+final nearBudgetCategoriesProvider = Provider<List<ExpenseCategory>>((ref) {
+  final usage = ref.watch(categoryBudgetUsageProvider);
+  return usage.entries
+      .where((e) => e.value >= 0.8 && e.value < 1.0)
+      .map((e) => e.key)
+      .toList();
 });

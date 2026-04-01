@@ -155,10 +155,11 @@ class _AddEditGoalScreenState extends ConsumerState<AddEditGoalScreen> {
                   ),
                 );
                 if (confirmed == true && mounted) {
+                  final navigator = Navigator.of(context);
                   await ref
                       .read(savingsGoalNotifierProvider.notifier)
                       .deleteGoal(widget.existingGoal!.id);
-                  if (mounted) Navigator.of(context).pop(true);
+                  if (mounted) navigator.pop(true);
                 }
               },
             ),
@@ -233,7 +234,7 @@ class _AddEditGoalScreenState extends ConsumerState<AddEditGoalScreen> {
               _buildLabel('Category'),
               const SizedBox(height: 8),
               DropdownButtonFormField<String>(
-                value: _selectedCategory,
+                initialValue: _selectedCategory,
                 isExpanded: true,
                 decoration: const InputDecoration(
                   labelText: 'Select category',
@@ -254,8 +255,9 @@ class _AddEditGoalScreenState extends ConsumerState<AddEditGoalScreen> {
                 onChanged: _isSaving
                     ? null
                     : (value) {
-                        if (value != null)
+                        if (value != null) {
                           setState(() => _selectedCategory = value);
+                        }
                       },
                 disabledHint: Text(_selectedCategory),
               ),
@@ -265,7 +267,7 @@ class _AddEditGoalScreenState extends ConsumerState<AddEditGoalScreen> {
               _buildLabel('Priority'),
               const SizedBox(height: 8),
               DropdownButtonFormField<String>(
-                value: _selectedPriority,
+                initialValue: _selectedPriority,
                 isExpanded: true,
                 decoration: const InputDecoration(
                   labelText: 'Select priority',
@@ -278,8 +280,9 @@ class _AddEditGoalScreenState extends ConsumerState<AddEditGoalScreen> {
                 onChanged: _isSaving
                     ? null
                     : (value) {
-                        if (value != null)
+                        if (value != null) {
                           setState(() => _selectedPriority = value);
+                        }
                       },
                 disabledHint: Text(_selectedPriority.isEmpty
                     ? 'Select priority'
@@ -292,7 +295,7 @@ class _AddEditGoalScreenState extends ConsumerState<AddEditGoalScreen> {
                 title: const Text('Set a deadline?'),
                 subtitle: const Text('Add target completion date'),
                 value: _hasDeadline,
-                activeColor: cs.primary,
+                activeThumbColor: cs.primary,
                 onChanged: _isSaving
                     ? null
                     : (val) => setState(() => _hasDeadline = val),
@@ -322,7 +325,7 @@ class _AddEditGoalScreenState extends ConsumerState<AddEditGoalScreen> {
                         ),
                         const Spacer(),
                         Icon(Icons.arrow_drop_down_rounded,
-                            color: cs.onSurface.withOpacity(0.5)),
+                            color: cs.onSurface.withValues(alpha: 0.5)),
                       ],
                     ),
                   ),
