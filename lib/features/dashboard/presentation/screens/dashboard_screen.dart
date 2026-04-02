@@ -12,6 +12,7 @@ import '../widgets/chart_widgets.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../expense/presentation/screens/add_edit_expense_screen.dart';
+import '../../../settings/presentation/screens/settings_screen.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -58,6 +59,14 @@ class DashboardScreen extends ConsumerWidget {
                   ),
                 ),
             ],
+          ),
+          // Settings Button
+          IconButton(
+            icon: const Icon(Icons.settings_outlined),
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const SettingsScreen()),
+            ),
+            tooltip: 'Settings',
           ),
         ],
       ),

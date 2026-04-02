@@ -263,9 +263,9 @@ class _AddEditGoalScreenState extends ConsumerState<AddEditGoalScreen> {
                 enabled: !_isSaving,
                 keyboardType:
                     const TextInputType.numberWithOptions(decimal: true),
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   hintText: '0',
-                  prefixText: '${AppConstants.currencySymbol} ',
+                  prefixText: '₹ ',
                 ),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
@@ -365,7 +365,7 @@ class _AddEditGoalScreenState extends ConsumerState<AddEditGoalScreen> {
                         ),
                         const Spacer(),
                         Icon(Icons.arrow_drop_down_rounded,
-                            color: cs.onSurface.withValues(alpha: 0.5)),
+                            color: cs.onSurface.withAlpha(51)),
                       ],
                     ),
                   ),

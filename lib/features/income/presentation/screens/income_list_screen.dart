@@ -164,7 +164,7 @@ class IncomeListScreen extends ConsumerWidget {
 
                   // Income Summary Cards
                   _IncomeStatsCard(stats: stats, colorScheme: cs),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 16),
 
                   // Income List
                   if (incomes.isEmpty)

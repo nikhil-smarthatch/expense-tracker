@@ -66,6 +66,12 @@ class _AppShellState extends State<AppShell> {
   int _currentIndex = 0;
   late PageController _pageController;
 
+  // Named tab indices to avoid magic numbers
+  static const int _dashboardIndex = 0;
+  static const int _expensesIndex = 1;
+  static const int _incomeIndex = 2;
+  static const int _accountsIndex = 3;
+
   @override
   void initState() {
     super.initState();
@@ -130,14 +136,14 @@ class _AppShellState extends State<AppShell> {
         ],
       ),
       floatingActionButton:
-          _currentIndex == 0 // Dashboard
+          _currentIndex == _dashboardIndex
               ? null
               : FloatingActionButton(
                   onPressed: () {
-                    if (_currentIndex == 1 || _currentIndex == 2) { // Expenses, Income
+                    if (_currentIndex == _expensesIndex || _currentIndex == _incomeIndex) {
                       Navigator.of(context).push(MaterialPageRoute(
-                          builder: (_) => AddEditExpenseScreen(initialIsIncome: _currentIndex == 2)));
-                    } else if (_currentIndex == 3) { // Accounts
+                          builder: (_) => AddEditExpenseScreen(initialIsIncome: _currentIndex == _incomeIndex)));
+                    } else if (_currentIndex == _accountsIndex) {
                       showModalBottomSheet(
                         context: context,
                         builder: (_) => SafeArea(
@@ -167,7 +173,7 @@ class _AppShellState extends State<AppShell> {
                       );
                     }
                   },
-                  tooltip: _currentIndex == 1 || _currentIndex == 2
+                  tooltip: _currentIndex == _expensesIndex || _currentIndex == _incomeIndex
                       ? 'Add Record'
                       : 'Add Account Item',
                   child: const Icon(Icons.add_rounded),

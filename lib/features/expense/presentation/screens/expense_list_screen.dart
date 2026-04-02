@@ -8,9 +8,10 @@ import '../widgets/monthly_filter.dart';
 import 'add_edit_expense_screen.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../widgets/category_budget_dialog.dart';
-import 'reports_screen.dart';
+import '../../../search/presentation/screens/transaction_search_screen.dart';
+import 'budget_templates_screen.dart';
 
-enum ExpenseMenuAction { reports, categoryBudgets, setBudget }
+enum ExpenseMenuAction { categoryBudgets, setBudget, budgetTemplates }
 
 class ExpenseListScreen extends ConsumerWidget {
   const ExpenseListScreen({super.key});
@@ -28,36 +29,27 @@ class ExpenseListScreen extends ConsumerWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.search_rounded),
-            onPressed: () => showSearch(
-              context: context,
-              delegate: _ExpenseSearchDelegate(ref),
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const TransactionSearchScreen()),
             ),
-            tooltip: 'Search',
+            tooltip: 'Search All Transactions',
           ),
           PopupMenuButton<ExpenseMenuAction>(
             onSelected: (action) {
-              if (action == ExpenseMenuAction.reports) {
-                Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const ReportsScreen()),
-                );
-              } else if (action == ExpenseMenuAction.categoryBudgets) {
+              if (action == ExpenseMenuAction.categoryBudgets) {
                 showDialog(
                   context: context,
                   builder: (_) => const CategoryBudgetDialog(),
                 );
               } else if (action == ExpenseMenuAction.setBudget) {
                 _showBudgetDialog(context, ref, budgetLimit);
+              } else if (action == ExpenseMenuAction.budgetTemplates) {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const BudgetTemplatesScreen()),
+                );
               }
             },
             itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: ExpenseMenuAction.reports,
-                child: ListTile(
-                  leading: Icon(Icons.description_outlined),
-                  title: Text('Reports'),
-                  contentPadding: EdgeInsets.zero,
-                ),
-              ),
               const PopupMenuItem(
                 value: ExpenseMenuAction.categoryBudgets,
                 child: ListTile(
@@ -71,6 +63,14 @@ class ExpenseListScreen extends ConsumerWidget {
                 child: ListTile(
                   leading: Icon(Icons.settings_outlined),
                   title: Text('Set Monthly Budget'),
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ),
+              const PopupMenuItem(
+                value: ExpenseMenuAction.budgetTemplates,
+                child: ListTile(
+                  leading: Icon(Icons.account_balance_wallet_rounded),
+                  title: Text('Budget Templates'),
                   contentPadding: EdgeInsets.zero,
                 ),
               ),
@@ -198,88 +198,6 @@ class ExpenseListScreen extends ConsumerWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-// ────────────────────────────────────────
-// Search Delegate
-// ────────────────────────────────────────
-
-class _ExpenseSearchDelegate extends SearchDelegate<Expense?> {
-  _ExpenseSearchDelegate(this.ref);
-
-  final WidgetRef ref;
-
-  @override
-  String get searchFieldLabel => 'Search by note or category...';
-
-  @override
-  List<Widget> buildActions(BuildContext context) => [
-        if (query.isNotEmpty)
-          IconButton(
-            icon: const Icon(Icons.clear_rounded),
-            onPressed: () => query = '',
-          ),
-      ];
-
-  @override
-  Widget buildLeading(BuildContext context) => BackButton(
-        onPressed: () => close(context, null),
-      );
-
-  @override
-  Widget buildResults(BuildContext context) => _buildList(context);
-
-  @override
-  Widget buildSuggestions(BuildContext context) => _buildList(context);
-
-  Widget _buildList(BuildContext context) {
-    if (query.trim().isEmpty) {
-      return const Center(
-        child: Text('Type to search expenses...'),
-      );
-    }
-
-    final allExpensesAsync = ref.watch(expensesProvider);
-    return allExpensesAsync.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => Center(child: Text('Error: $e')),
-      data: (expenses) {
-        final q = query.toLowerCase();
-        final results = expenses.where((e) {
-          final noteMatch = e.note?.toLowerCase().contains(q) ?? false;
-          final categoryMatch =
-              e.category.label.toLowerCase().contains(q);
-          return noteMatch || categoryMatch;
-        }).toList();
-
-        if (results.isEmpty) {
-          return const EmptyStateWidget(
-            title: 'No results found',
-            subtitle: 'Try a different search term',
-            icon: Icons.search_off_rounded,
-          );
-        }
-
-        return ListView.builder(
-          padding: const EdgeInsets.all(16),
-          itemCount: results.length,
-          itemBuilder: (context, index) {
-            final expense = results[index];
-            return ExpenseCard(
-              expense: expense,
-              onTap: () {
-                close(context, expense);
-                Navigator.of(context).push(MaterialPageRoute(
-                  builder: (_) =>
-                      AddEditExpenseScreen(existingExpense: expense),
-                ));
-              },
-            );
-          },
-        );
-      },
     );
   }
 }

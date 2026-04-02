@@ -19,9 +19,8 @@ class SavingsGoal {
   final String description;
   final double targetAmount;
   final double currentAmount;
-  final String
-      category; // "Emergency Fund", "Vacation", "House", "Education", etc.
-  final String priority; // "high", "medium", "low"
+  final String category; // e.g., "Emergency Fund", "Vacation", "House"
+  final String priority; // e.g., "high", "medium", "low"
   final DateTime createdDate;
   final DateTime? deadline;
   final bool isCompleted;
